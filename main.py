@@ -1,3 +1,4 @@
+from __future__ import division
 import numpy as np
 import math
 import numpy.linalg as la
@@ -9,8 +10,6 @@ from corner import *
 # The volleyball court floor is used as the plane for homography calculation purposes
 # Hence, because of our choice of coordinates, the world coordinates coincide with our plane coordinates
 # with (Wx, Wy, Wz) = (Vp, Up, Zp)
-
-# Video Dimensions - 300 x 631
 CLIP1 = './beachVolleyball/beachVolleyball1.mov'
 CLIP2 = './beachVolleyball/beachVolleyball2.mov'
 CLIP3 = './beachVolleyball/beachVolleyball3.mov'
@@ -19,21 +18,30 @@ CLIP5 = './beachVolleyball/beachVolleyball5.mov'
 CLIP6 = './beachVolleyball/beachVolleyball6.mov'
 CLIP7 = './beachVolleyball/beachVolleyball7.mov'
 
+# Video Dimensions - 300 x 632
+CLIP1_SHAPE = (300, 632)
+CLIP2_SHAPE = (300, 632)
+CLIP3_SHAPE = (300, 632)
+CLIP4_SHAPE = (300, 632)
+CLIP5_SHAPE = (300, 632)
+CLIP6_SHAPE = (300, 632)
+CLIP7_SHAPE = (300, 632)
+
 # Using 1 cm = 1 unit as our scale, we can write down the coordinates of 5 key points on the plane
 # For purposes of feature extraction, we need to identify points that are good corners and appear consistently
 # in all frames of the clip
 # Size of olympic sized beach volleyball court - 8m wide by 16m long
 VCOURT_CENTER    = np.array([0,0,0])
-VCOURT_TOP_LEFT  = np.array([-4, -8, 0])
-VCOURT_TOP_RIGHT = np.array([4, -8, 0])
-VCOURT_BOT_LEFT  = np.array([-4, 8, 0])
-VCOURT_BOT_RIGHT = np.array([4, 8, 0])
-VCOURT_NET_LEFT  = np.array([-5,0,0])
-VCOURT_NET_RIGHT = np.array([5,0,0])
-
-def get_plane_coordinates(H, img):
-	""" Given img point, [uc, vc, 1], apply Homography to obtain the plane/world coordinates of the players (up, up, 1)"""
-	return np.dot(np.inv(H), img)
+VCOURT_TOP_LEFT  = np.array([-400, -800, 0])
+VCOURT_TOP_RIGHT = np.array([400, -800, 0])
+VCOURT_BOT_LEFT  = np.array([-400, 800, 0])
+VCOURT_BOT_RIGHT = np.array([400, 800, 0])
+VCOURT_NET_LEFT  = np.array([-500,0,0])
+VCOURT_NET_RIGHT = np.array([500,0,0])
+VCOURT_LEFT_MID  = np.array([-400,0,0])
+VCOURT_RIGHT_MID = np.array([400,0,0])
+VCOURT_BOT_MID   = np.array([0,800,0])
+VCOURT_TOP_MID   = np.array([0,-800,0])
 
 def get_bg(filename):
 	""" Get background of image by averaging method. Only works for stationary camera and background"""
@@ -50,9 +58,9 @@ def get_bg(filename):
 		cv2.accumulateWeighted(frame, avgImg, alpha)
 		print("Frame = " + str(count) + ", alpha = " + str(alpha))
 		cv2.imshow('background', avgImg)
-		cv2.waitKey(25)
+		cv2.waitKey(1)
 		normImg = cv2.convertScaleAbs(avgImg)
-		cv2.waitKey(25)
+		cv2.waitKey(1)
 		cv2.imshow('normalized background', normImg)
 		ret, frame = cap.read()
 		count += 1
@@ -64,22 +72,259 @@ def get_bg(filename):
 	cap.release()
 	cv2.destroyAllWindows()
 
-def show_video_in_matplot(image):
-	plt.figure()
-	plt.imshow(image)
-	plt.show()
-
-def main():
-	cap = cv2.VideoCapture(CLIP1)
-	ret, frame = cap.read()
-	while cap.isOpened() and ret:
-		bw = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-		# (corner, x, y) = harris_corner(bw)
-		cv2.imshow('background', frame)
-		cv2.waitKey(25)
+def show_frame_in_matplot(filename, num):
+	""" Show frame number from filename in matplot"""
+	cap = cv2.VideoCapture(filename)
+	count = 0
+	while(cap.isOpened() and count <= num):
+		count += 1
 		ret, frame = cap.read()
+	plt.figure()
+	plt.imshow(frame)
+	plt.show()
 	cap.release()
+
+def motion_tracking(filename, ROI, start=0, end=None, maxCorners=3, skip=None):
+	""" 
+		Uses OpenCV to extract good corners and track the movement of those corners.
+		ROI is a mask to extract only features from this part of the image
+		start from frame no., with 1st frame in video as frame 0
+		end at frame no., with None defaulting to full video file
+		Skip = (min, max) contains a range of frame numbers with which the algorithm should skip for better results
+	"""
+	cap = cv2.VideoCapture(filename)
+	
+	# params for ShiTomasi corner detection
+	feature_params = dict( maxCorners = maxCorners,
+						   qualityLevel = 0.1,
+						   minDistance = 7,
+						   blockSize = 7 )
+	
+	# Parameters for lucas kanade optical flow
+	lk_params = dict(winSize  = (30,30),
+					maxLevel = 7,
+					criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
+	
+	# Create some random colors
+	color = np.random.randint(0,255,(100,3))
+	
+	# Take first frame and find corners in it
+	ret, old_frame = cap.read()
+	
+	old_gray = cv2.cvtColor(old_frame, cv2.COLOR_BGR2GRAY)
+	p0 = cv2.goodFeaturesToTrack(old_gray, mask = ROI, **feature_params)
+	
+	# Create a mask image for drawing purposes
+	mask = np.zeros_like(old_frame)
+   
+   	count = 0
+   	results = np.zeros((1,2))
+	while(1):
+
+		ret,frame = cap.read()
+		if count < start:
+			count += 1
+			continue
+		else:
+			count += 1
+
+		if skip is not None and count >= skip[0] and count <= skip[1]:
+			results = np.vstack((results, good_new))
+			continue
+
+		frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+		# calculate optical flow
+		p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray, frame_gray, p0, None, **lk_params)
+
+		# Select good points
+		good_new = p1[st==1]
+		good_old = p0[st==1]
+	
+		results = np.vstack((results, good_new))
+		# draw the tracks
+		for i,(new,old) in enumerate(zip(good_new,good_old)):
+			a,b = new.ravel()
+			c,d = old.ravel()
+			mask = cv2.line(mask, (a,b),(c,d), color[i].tolist(), 2)
+			frame = cv2.circle(frame,(a,b),5,color[i].tolist(),-1)
+		img = cv2.add(frame,mask)
+	
+		cv2.imshow('frame',img)
+		k = cv2.waitKey(1) & 0xff
+		if k == 27:
+			break
+	
+		# Now update the previous frame and previous points
+		old_gray = frame_gray.copy()
+		p0 = good_new.reshape(-1,1,2)
+
+		if end is not None and count > end:
+			break
 	cv2.destroyAllWindows()
+	cap.release()
+	# print(results)
+	return results[1:]
+
+def generate_ROI(shape, x, y, w, h):
+	""" Generates region of interest mask, shape is image size (height, width) tuple, x and y are starting coordinates"""
+	mask = np.zeros(shape, np.uint8)
+	mask[y:y+h, x:x+w] = 255
+	return mask
+
+def get_plane_coordinates(H, img):
+	""" Given img point, [uc, vc, 1], apply Homography to obtain the plane/world coordinates of the players (up, up, 1)"""
+	img = np.matrix(img).T
+	try:
+		result = np.dot(la.inv(H), img).T
+		return result
+	except Exception as e:
+		print e
+		return np.zeros((3,3))
+
+def plot_player(pts):
+	print(np.max(pts))
+	print(np.min(pts))
+	plt.figure()
+	plt.ion()
+	plt.xlim([-4000,4000])
+	plt.ylim([-8000, 8000])
+	for i in range(0, pts.shape[0]):
+		# if pts[i,2] > -0.8 and pts[i,2] < 1.2:
+		plt.scatter(pts[i,0], pts[i,1], marker='x')
+		plt.show()
+		plt.pause(0.1)
+
+# CLIP1_GREEN_P1_ROI = {
+# 	'x' : 330,
+# 	'y' : 180,
+# 	'h' : 50,
+# 	'w' : 50
+# }
+CLIP1_GREEN_P1_ROI = {
+	'x' : 470,
+	'y' : 210,
+	'h' : 30,
+	'w' : 30
+}
+CLIP1_GREEN_P2_ROI = {
+	'x' : 190,
+	'y' : 100,
+	'h' : 50,
+	'w' : 50
+}
+
+CLIP1_VCOURT_BOT_RIGHT = {
+	'x' : 430,
+	'y' : 130,
+	'h' : 50,
+	'w' : 50
+}
+CLIP1_VCOURT_BOT_LEFT = {
+	'x' : 170,
+	'y' : 275,
+	'h' : 50,
+	'w' : 50
+}
+CLIP1_VCOURT_NET_RIGHT = {
+	'x' : 255,
+	'y' : 70,
+	'h' : 50,
+	'w' : 50
+}
+CLIP1_VCOURT_NET_LEFT = {
+	'x' : 35,
+	'y' : 130,
+	'h' : 50,
+	'w' : 50
+}
+CLIP1_VCOURT_RIGHT_MID = {
+	'x' : 280,
+	'y' : 85,
+	'h' : 10,
+	'w' : 10
+}
+CLIP1_VCOURT_LEFT_MID = {
+	'x' : 70,
+	'y' : 130,
+	'h' : 15,
+	'w' : 15
+}
+def main():
+	# Specify regions of interest for tracking objects
+	# show_frame_in_matplot(CLIP1, 0)
+	ROI_CLIP1_VCOURT_BR = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_BOT_RIGHT['x'], CLIP1_VCOURT_BOT_RIGHT['y'], CLIP1_VCOURT_BOT_RIGHT['w'], CLIP1_VCOURT_BOT_RIGHT['h'])
+	ROI_CLIP1_VCOURT_NR = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_NET_RIGHT['x'], CLIP1_VCOURT_NET_RIGHT['y'], CLIP1_VCOURT_NET_RIGHT['w'], CLIP1_VCOURT_NET_RIGHT['h'])
+	ROI_CLIP1_VCOURT_NL = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_NET_LEFT['x'], CLIP1_VCOURT_NET_LEFT['y'], CLIP1_VCOURT_NET_LEFT['w'], CLIP1_VCOURT_NET_LEFT['h'])
+	ROI_CLIP1_VCOURT_RM = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RIGHT_MID['x'], CLIP1_VCOURT_RIGHT_MID['y'], CLIP1_VCOURT_RIGHT_MID['w'], CLIP1_VCOURT_RIGHT_MID['h'])
+	ROI_CLIP1_VCOURT_LM = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_LEFT_MID['x'], CLIP1_VCOURT_LEFT_MID['y'], CLIP1_VCOURT_LEFT_MID['w'], CLIP1_VCOURT_LEFT_MID['h'])
+
+	# Track image coordinates of known points on the floor plane
+	clip1_vcourt_br = motion_tracking(CLIP1, ROI_CLIP1_VCOURT_BR, start=0, end=630, maxCorners=1, skip=(240,280))
+	clip1_vcourt_nl = motion_tracking(CLIP1, ROI_CLIP1_VCOURT_NL, start=0, end=630, maxCorners=1)
+	clip1_vcourt_nr = motion_tracking(CLIP1, ROI_CLIP1_VCOURT_NR, start=0, end=630, maxCorners=1)
+	clip1_vcourt_rm = motion_tracking(CLIP1, ROI_CLIP1_VCOURT_RM, start=0, end=630, maxCorners=1)
+	clip1_vcourt_lm = motion_tracking(CLIP1, ROI_CLIP1_VCOURT_LM, start=0, end=630, maxCorners=1)
+	
+	# Make sure they are of right dimensions
+	# print(len(clip1_vcourt_br))
+	# print(len(clip1_vcourt_nl))
+	# print(len(clip1_vcourt_nr))
+	# print(len(clip1_vcourt_rm))
+	# print(len(clip1_vcourt_lm))
+	
+	# Track players
+	ROI_CLIP1_GREEN_P1 = generate_ROI(CLIP1_SHAPE, CLIP1_GREEN_P1_ROI['x'], CLIP1_GREEN_P1_ROI['y'], CLIP1_GREEN_P1_ROI['w'], CLIP1_GREEN_P1_ROI['h'])
+	clip1_p1_feet = motion_tracking(CLIP1, ROI_CLIP1_GREEN_P1, start=0, end=360, maxCorners=3)
+	clip1_p1_feet = clip1_p1_feet[2::3,:]
+	print(clip1_p1_feet.shape[0]) # Take the 3rd corner -  right knee
+
+	# ROI_CLIP1_GREEN_P2 = generate_ROI(CLIP1_SHAPE, CLIP1_GREEN_P2_ROI['x'], CLIP1_GREEN_P2_ROI['y'], CLIP1_GREEN_P2_ROI['w'], CLIP1_GREEN_P2_ROI['h'])
+	# clip1_p2_feet = motion_tracking(CLIP1, ROI_CLIP1_GREEN_P2, start=0, end=720, maxCorners=1)
+	# print(clip1_p2_feet) # Take 1st corner which is left knee
+
+	pts = np.vstack((
+		VCOURT_BOT_RIGHT,
+		VCOURT_NET_LEFT,
+		VCOURT_NET_RIGHT,
+		VCOURT_RIGHT_MID,
+		VCOURT_LEFT_MID
+		))
+	H = np.zeros((3,3))
+	# Get homography matrix for each frame
+	# for i in range(0, clip1_vcourt_br.shape[0]): # i is frame number
+	for i in range(0, 360):
+		cam = np.vstack((
+			clip1_vcourt_br[i,:], 
+			clip1_vcourt_nl[i,:],
+			clip1_vcourt_nr[i,:],
+			clip1_vcourt_rm[i,:],
+			clip1_vcourt_lm[i,:]))
+		h = calc_homography(pts, cam)
+		H = np.vstack((H, h))
+	H = H[3:] # Discard first frame of 0s
+
+	# Get plane coordinates for each player position in the image
+	PLAYER_COORDS = np.zeros((1,3))
+	for i in range(0, clip1_p1_feet.shape[0]):
+		coord = get_plane_coordinates(H[3*i:3*i+3], np.hstack((clip1_p1_feet[i,:],1)))
+		PLAYER_COORDS = np.vstack((PLAYER_COORDS, coord))
+	np.savetxt('./player.txt', PLAYER_COORDS[1:,:])
+
+	pts = np.loadtxt('./player.txt')
+	plot_player(pts)
+
+	# get_bg(CLIP1)
+	# cap = cv2.VideoCapture(CLIP1)
+	# ret, frame = cap.read()
+	# while cap.isOpened() and ret:
+	# 	bw = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+	# 	# (corner, x, y) = harris_corner(bw)
+	# 	cv2.imshow('background', frame)
+	# 	cv2.waitKey(25)
+	# 	ret, frame = cap.read()
+	# cap.release()
+	# cv2.destroyAllWindows()
 
 if __name__ == "__main__":
 	main()

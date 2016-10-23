@@ -142,7 +142,7 @@ def calc_homography(pts, cam):
 	"""
 	# 3: Homography - using pts and taking u_c, v_c to be the coordinates of the image under perspective projection
 	A = np.zeros((1,9))
-	for i in pts[i,:]:
+	for i in range(0, pts.shape[0]):
 		A = np.vstack((A,
 			np.array([
 				[pts[i,0], pts[i,1], 1, 0, 0, 0, -1*cam[i,0]*pts[i,0], -1*cam[i,0]*pts[i,1], -1*cam[i,0]],
@@ -150,6 +150,7 @@ def calc_homography(pts, cam):
 			]))
 		)
 	U, S, V = la.svd(np.matrix(A))
+	print(S[-1])
 	H = np.reshape(V[-1,:], (3,3))
 	# Normalize H
 	H = np.divide(H, H[2,2])
