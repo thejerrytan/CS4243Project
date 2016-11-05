@@ -5,6 +5,9 @@ import numpy.linalg as la
 import cv2
 from homography import *
 from corner import *
+from roi import *
+np.seterr(divide='ignore', invalid='ignore')
+np.set_printoptions(threshold=np.inf)
 
 # We define world origin as (0,0,0) to be at the center of the volleyball court.
 # The volleyball court floor is used as the plane for homography calculation purposes
@@ -101,7 +104,7 @@ def motion_tracking(filename, ROI, start=0, end=None, maxCorners=3, skip=None):
 						   blockSize = 7 )
 	
 	# Parameters for lucas kanade optical flow
-	lk_params = dict(winSize  = (30,30),
+	lk_params = dict(winSize  = (15,15),
 					maxLevel = 7,
 					criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 	
@@ -176,80 +179,30 @@ def get_plane_coordinates(H, img):
 	""" Given img point, [uc, vc, 1], apply Homography to obtain the plane/world coordinates of the players (up, up, 1)"""
 	img = np.matrix(img).T
 	try:
-		result = np.dot(la.inv(H), img).T
-		return result
+		result = np.dot(la.inv(H), img)
+		return (result / result[2]).T
 	except Exception as e:
 		print e
 		return np.zeros((3,3))
 
+def calc_alpha():
+	pass
+
+
 def plot_player(pts):
-	print(np.max(pts))
-	print(np.min(pts))
+	# print(np.max(pts))
+	# print(np.min(pts))
 	plt.figure()
 	plt.ion()
-	plt.xlim([-4000,4000])
-	plt.ylim([-8000, 8000])
+	plt.xlim([-5000,5000])
+	plt.ylim([-10000, 10000])
 	for i in range(0, pts.shape[0]):
 		# if pts[i,2] > -0.8 and pts[i,2] < 1.2:
 		plt.scatter(pts[i,0], pts[i,1], marker='x')
 		plt.show()
-		plt.pause(0.1)
+		plt.pause(0.016)
+	raw_input()
 
-# CLIP1_GREEN_P1_ROI = {
-# 	'x' : 330,
-# 	'y' : 180,
-# 	'h' : 50,
-# 	'w' : 50
-# }
-CLIP1_GREEN_P1_ROI = {
-	'x' : 470,
-	'y' : 210,
-	'h' : 30,
-	'w' : 30
-}
-CLIP1_GREEN_P2_ROI = {
-	'x' : 190,
-	'y' : 100,
-	'h' : 50,
-	'w' : 50
-}
-
-CLIP1_VCOURT_BOT_RIGHT = {
-	'x' : 430,
-	'y' : 130,
-	'h' : 50,
-	'w' : 50
-}
-CLIP1_VCOURT_BOT_LEFT = {
-	'x' : 170,
-	'y' : 275,
-	'h' : 50,
-	'w' : 50
-}
-CLIP1_VCOURT_NET_RIGHT = {
-	'x' : 255,
-	'y' : 70,
-	'h' : 50,
-	'w' : 50
-}
-CLIP1_VCOURT_NET_LEFT = {
-	'x' : 35,
-	'y' : 130,
-	'h' : 50,
-	'w' : 50
-}
-CLIP1_VCOURT_RIGHT_MID = {
-	'x' : 280,
-	'y' : 85,
-	'h' : 10,
-	'w' : 10
-}
-CLIP1_VCOURT_LEFT_MID = {
-	'x' : 70,
-	'y' : 130,
-	'h' : 15,
-	'w' : 15
-}
 def main():
 	# Specify regions of interest for tracking objects
 	# show_frame_in_matplot(CLIP1, 0)
@@ -260,12 +213,18 @@ def main():
 	ROI_CLIP1_VCOURT_LM = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_LEFT_MID['x'], CLIP1_VCOURT_LEFT_MID['y'], CLIP1_VCOURT_LEFT_MID['w'], CLIP1_VCOURT_LEFT_MID['h'])
 
 	# Track image coordinates of known points on the floor plane
-	clip1_vcourt_br = motion_tracking(CLIP1, ROI_CLIP1_VCOURT_BR, start=0, end=630, maxCorners=1, skip=(240,280))
-	clip1_vcourt_nl = motion_tracking(CLIP1, ROI_CLIP1_VCOURT_NL, start=0, end=630, maxCorners=1)
-	clip1_vcourt_nr = motion_tracking(CLIP1, ROI_CLIP1_VCOURT_NR, start=0, end=630, maxCorners=1)
-	clip1_vcourt_rm = motion_tracking(CLIP1, ROI_CLIP1_VCOURT_RM, start=0, end=630, maxCorners=1)
-	clip1_vcourt_lm = motion_tracking(CLIP1, ROI_CLIP1_VCOURT_LM, start=0, end=630, maxCorners=1)
+	# clip1_vcourt_br = motion_tracking(CLIP1, ROI_CLIP1_VCOURT_BR, start=0, end=630, maxCorners=1, skip=(240,280))
+	# clip1_vcourt_nl = motion_tracking(CLIP1, ROI_CLIP1_VCOURT_NL, start=0, end=630, maxCorners=1)
+	# clip1_vcourt_nr = motion_tracking(CLIP1, ROI_CLIP1_VCOURT_NR, start=0, end=630, maxCorners=1)
+	# clip1_vcourt_rm = motion_tracking(CLIP1, ROI_CLIP1_VCOURT_RM, start=0, end=630, maxCorners=1)
+	# clip1_vcourt_lm = motion_tracking(CLIP1, ROI_CLIP1_VCOURT_LM, start=0, end=630, maxCorners=1)
 	
+	# np.savetxt('./clip1_vcourt_br.txt', clip1_vcourt_br)
+	# np.savetxt('./clip1_vcourt_nl.txt', clip1_vcourt_nl)
+	# np.savetxt('./clip1_vcourt_nr.txt', clip1_vcourt_nr)
+	# np.savetxt('./clip1_vcourt_rm.txt', clip1_vcourt_rm)
+	# np.savetxt('./clip1_vcourt_lm.txt', clip1_vcourt_lm)
+
 	# Make sure they are of right dimensions
 	# print(len(clip1_vcourt_br))
 	# print(len(clip1_vcourt_nl))
@@ -274,10 +233,11 @@ def main():
 	# print(len(clip1_vcourt_lm))
 	
 	# Track players
-	ROI_CLIP1_GREEN_P1 = generate_ROI(CLIP1_SHAPE, CLIP1_GREEN_P1_ROI['x'], CLIP1_GREEN_P1_ROI['y'], CLIP1_GREEN_P1_ROI['w'], CLIP1_GREEN_P1_ROI['h'])
-	clip1_p1_feet = motion_tracking(CLIP1, ROI_CLIP1_GREEN_P1, start=0, end=360, maxCorners=3)
-	clip1_p1_feet = clip1_p1_feet[2::3,:]
-	print(clip1_p1_feet.shape[0]) # Take the 3rd corner -  right knee
+	# ROI_CLIP1_GREEN_P1 = generate_ROI(CLIP1_SHAPE, CLIP1_GREEN_P1_ROI['x'], CLIP1_GREEN_P1_ROI['y'], CLIP1_GREEN_P1_ROI['w'], CLIP1_GREEN_P1_ROI['h'])
+	# clip1_p1_feet = motion_tracking(CLIP1, ROI_CLIP1_GREEN_P1, start=360, end=630, maxCorners=3)
+	# clip1_p1_feet = clip1_p1_feet[1::2,:]
+	# print(clip1_p1_feet.shape)
+	# np.savetxt('./clip1_p1_feet.txt', clip1_p1_feet)
 
 	# ROI_CLIP1_GREEN_P2 = generate_ROI(CLIP1_SHAPE, CLIP1_GREEN_P2_ROI['x'], CLIP1_GREEN_P2_ROI['y'], CLIP1_GREEN_P2_ROI['w'], CLIP1_GREEN_P2_ROI['h'])
 	# clip1_p2_feet = motion_tracking(CLIP1, ROI_CLIP1_GREEN_P2, start=0, end=720, maxCorners=1)
@@ -291,28 +251,71 @@ def main():
 		VCOURT_LEFT_MID
 		))
 	H = np.zeros((3,3))
+
+	clip1_vcourt_br = np.loadtxt('./clip1_vcourt_br.txt')
+	clip1_vcourt_nl = np.loadtxt('./clip1_vcourt_nl.txt')
+	clip1_vcourt_nr = np.loadtxt('./clip1_vcourt_nr.txt')
+	clip1_vcourt_rm = np.loadtxt('./clip1_vcourt_rm.txt')
+	clip1_vcourt_lm = np.loadtxt('./clip1_vcourt_lm.txt')
+	clip1_p1_feet   = np.loadtxt('./clip1_p1_feet.txt')
 	# Get homography matrix for each frame
 	# for i in range(0, clip1_vcourt_br.shape[0]): # i is frame number
-	for i in range(0, 360):
+	eigenvalues = []
+	for i in range(0, clip1_p1_feet.shape[0]):
 		cam = np.vstack((
 			clip1_vcourt_br[i,:], 
 			clip1_vcourt_nl[i,:],
 			clip1_vcourt_nr[i,:],
 			clip1_vcourt_rm[i,:],
 			clip1_vcourt_lm[i,:]))
-		h = calc_homography(pts, cam)
+		(h, s) = calc_homography(pts, cam)
+		eigenvalues.append(s)
 		H = np.vstack((H, h))
 	H = H[3:] # Discard first frame of 0s
+	# Average error/noise in our Homography matrices
+	avg = sum(eigenvalues) / len(eigenvalues)
+	print("Averge error is %.2f: " % avg)
 
 	# Get plane coordinates for each player position in the image
-	PLAYER_COORDS = np.zeros((1,3))
-	for i in range(0, clip1_p1_feet.shape[0]):
-		coord = get_plane_coordinates(H[3*i:3*i+3], np.hstack((clip1_p1_feet[i,:],1)))
-		PLAYER_COORDS = np.vstack((PLAYER_COORDS, coord))
-	np.savetxt('./player.txt', PLAYER_COORDS[1:,:])
+	# PLAYER_COORDS = np.zeros((1,3))
+	# for i in range(0, clip1_p1_feet.shape[0]):
+	# 	coord = get_plane_coordinates(H[3*i:3*i+3], np.hstack((clip1_p1_feet[i,:],1)))
+	# 	PLAYER_COORDS = np.vstack((PLAYER_COORDS, coord))
+	# np.savetxt('./player.txt', PLAYER_COORDS[1:,:])
+	# pts = np.loadtxt('./player.txt')
+	# plot_player(pts)
 
-	pts = np.loadtxt('./player.txt')
-	plot_player(pts)
+	# Verify H by getting back reference pts in plane coordinates
+	REF_COORDS = np.zeros((1,3))
+	# for i in range(0, clip1_p1_feet.shape[0]):
+	# 	coord = get_plane_coordinates(H[3*i:3*i+3], np.hstack((clip1_vcourt_br[i,:],1)))
+	# 	REF_COORDS = np.vstack((REF_COORDS, coord))
+	# print(REF_COORDS)
+	# plot_player(REF_COORDS)
+
+	# for i in range(0, clip1_p1_feet.shape[0]):
+	# 	coord = get_plane_coordinates(H[3*i:3*i+3], np.hstack((clip1_vcourt_nl[i,:],1)))
+	# 	REF_COORDS = np.vstack((REF_COORDS, coord))
+	# print(REF_COORDS)
+	# plot_player(REF_COORDS[1:])
+
+	# for i in range(0, clip1_p1_feet.shape[0]):
+	# 	coord = get_plane_coordinates(H[3*i:3*i+3], np.hstack((clip1_vcourt_nr[i,:],1)))
+	# 	REF_COORDS = np.vstack((REF_COORDS, coord))
+	# print(REF_COORDS)
+	# plot_player(REF_COORDS[1:])
+
+	# for i in range(0, clip1_p1_feet.shape[0]):
+	# 	coord = get_plane_coordinates(H[3*i:3*i+3], np.hstack((clip1_vcourt_rm[i,:],1)))
+	# 	REF_COORDS = np.vstack((REF_COORDS, coord))
+	# print(REF_COORDS)
+	# plot_player(REF_COORDS[1:])
+
+	for i in range(0, clip1_p1_feet.shape[0]):
+		coord = get_plane_coordinates(H[3*i:3*i+3], np.hstack((clip1_vcourt_lm[i,:],1)))
+		REF_COORDS = np.vstack((REF_COORDS, coord))
+	print(REF_COORDS)
+	plot_player(REF_COORDS[1:])
 
 	# get_bg(CLIP1)
 	# cap = cv2.VideoCapture(CLIP1)

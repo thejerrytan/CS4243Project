@@ -153,8 +153,8 @@ def calc_homography(pts, cam):
 	print(S[-1])
 	H = np.reshape(V[-1,:], (3,3))
 	# Normalize H
-	H = np.divide(H, H[2,2])
-	return H
+	# H = np.divide(H, H[2,2])
+	return (H, S[-1])
 
 def test():
 	q1 = np.array([0,1,1,1])
