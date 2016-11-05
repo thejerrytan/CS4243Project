@@ -134,6 +134,13 @@ def per_proj(pos, orient):
 			print e
 	return (x,y)
 
+def calc_homography_cam():
+	"""
+		Returns H, induced by a plane and 2 cameras, given a set of 5 points (u,v,1) that lie on the same plane
+		The H we are trying to solve for is : [u1,v1,1] = H * [u2,v2,1]
+	"""
+	pass
+
 def calc_homography(pts, cam):
 	"""
 		Returns H, given a set of points on the plane [up, vp], and points on the camera image plane cam[uc, vc],
@@ -153,8 +160,27 @@ def calc_homography(pts, cam):
 	print(S[-1])
 	H = np.reshape(V[-1,:], (3,3))
 	# Normalize H
-	# H = np.divide(H, H[2,2])
+	H = np.divide(H, H[2,2])
+	if cam.shape[1] != 3:
+		cam = np.hstack((cam, 1))
+	for i in range(0, pts.shape[0]):
+		if not check_homography(pts[i], cam[i], H):
+			print("Error! Homography matrix is not a good solution")
 	return (H, S[-1])
+
+def check_homography(cam1, cam2, H):
+	""" Using the equation cam1 = H * cam2, check if H * cam2 gives back cam1 """
+	cam2 = cam2.T
+	a = np.array(np.dot(H, cam2)).reshape((3,))
+	a = a / a[2]
+	if np.allclose(a, cam1):
+		return True
+	else:
+		print("Original pt: ")
+		print(cam1)
+		print("After conversion:")
+		print(a)
+		return False
 
 def test():
 	q1 = np.array([0,1,1,1])

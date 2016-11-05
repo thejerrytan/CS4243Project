@@ -53,3 +53,33 @@ CLIP1_VCOURT_LEFT_MID = {
 	'h' : 15,
 	'w' : 15
 }
+CLIP1_VCOURT_RAND_PT1 = {
+	'x' : 50,
+	'y' : 220,
+	'h' : 30,
+	'w' : 30
+}
+CLIP1_VCOURT_RAND_PT2 = {
+	'x' : 50,
+	'y' : 180,
+	'h' : 30,
+	'w' : 30
+}
+CLIP1_VCOURT_RAND_PT3 = {
+	'x' : 250,
+	'y' : 200,
+	'h' : 30,
+	'w' : 30
+}
+CLIP1_VCOURT_RAND_PT4 = {
+	'x' : 280,
+	'y' : 80,
+	'h' : 30,
+	'w' : 30
+}
+CLIP1_VCOURT_RAND_PT5 = {
+	'x' : 60,
+	'y' : 150,
+	'h' : 30,
+	'w' : 30
+}

@@ -6,8 +6,15 @@ import cv2
 from homography import *
 from corner import *
 from roi import *
+from imutils.video import VideoStream
+import argparse
+import imutils
 np.seterr(divide='ignore', invalid='ignore')
 np.set_printoptions(threshold=np.inf)
+
+# Acknowledgements - The team would like to acknowledge the following resources referenced in our project
+# Processing video frames and writing to video file: http://www.pyimagesearch.com/2016/02/22/writing-to-video-with-opencv/
+# Lucas-Kanade optical flow tracker -
 
 # We define world origin as (0,0,0) to be at the center of the volleyball court.
 # The volleyball court floor is used as the plane for homography calculation purposes
@@ -120,8 +127,8 @@ def motion_tracking(filename, ROI, start=0, end=None, maxCorners=3, skip=None):
 	# Create a mask image for drawing purposes
 	mask = np.zeros_like(old_frame)
    
-   	count = 0
-   	results = np.zeros((1,2))
+	count = 0
+	results = np.zeros((1,2))
 	while(1):
 
 		ret,frame = cap.read()
@@ -188,7 +195,6 @@ def get_plane_coordinates(H, img):
 def calc_alpha():
 	pass
 
-
 def plot_player(pts):
 	# print(np.max(pts))
 	# print(np.min(pts))
@@ -202,6 +208,136 @@ def plot_player(pts):
 		plt.show()
 		plt.pause(0.016)
 	raw_input()
+
+def constructPanorama():
+	# show_frame_in_matplot(CLIP1, 0)
+	# ROI_CLIP1_RAND_PT1 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT1['x'], CLIP1_VCOURT_RAND_PT1['y'], CLIP1_VCOURT_RAND_PT1['w'], CLIP1_VCOURT_RAND_PT1['h'])
+	# ROI_CLIP1_RAND_PT2 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT2['x'], CLIP1_VCOURT_RAND_PT2['y'], CLIP1_VCOURT_RAND_PT2['w'], CLIP1_VCOURT_RAND_PT2['h'])
+	# ROI_CLIP1_RAND_PT3 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT3['x'], CLIP1_VCOURT_RAND_PT3['y'], CLIP1_VCOURT_RAND_PT3['w'], CLIP1_VCOURT_RAND_PT3['h'])
+	# ROI_CLIP1_RAND_PT4 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT4['x'], CLIP1_VCOURT_RAND_PT4['y'], CLIP1_VCOURT_RAND_PT4['w'], CLIP1_VCOURT_RAND_PT4['h'])
+	# ROI_CLIP1_RAND_PT5 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT5['x'], CLIP1_VCOURT_RAND_PT5['y'], CLIP1_VCOURT_RAND_PT5['w'], CLIP1_VCOURT_RAND_PT5['h'])
+
+	# clip1_vcourt_pt1 = motion_tracking(CLIP1, ROI_CLIP1_RAND_PT1, start=0, end=630, maxCorners=1)
+	# clip1_vcourt_pt2 = motion_tracking(CLIP1, ROI_CLIP1_RAND_PT2, start=0, end=630, maxCorners=1)
+	# clip1_vcourt_pt3 = motion_tracking(CLIP1, ROI_CLIP1_RAND_PT3, start=0, end=630, maxCorners=1)
+	# clip1_vcourt_pt4 = motion_tracking(CLIP1, ROI_CLIP1_RAND_PT4, start=0, end=630, maxCorners=1)
+	# clip1_vcourt_pt5 = motion_tracking(CLIP1, ROI_CLIP1_RAND_PT5, start=0, end=630, maxCorners=1)
+
+	# np.savetxt('./clip1_vcourt_br.txt', clip1_vcourt_pt1)
+	# np.savetxt('./clip1_vcourt_nl.txt', clip1_vcourt_pt2)
+	# np.savetxt('./clip1_vcourt_nr.txt', clip1_vcourt_pt3)
+	# np.savetxt('./clip1_vcourt_rm.txt', clip1_vcourt_pt4)
+	# np.savetxt('./clip1_vcourt_lm.txt', clip1_vcourt_pt5)
+
+	# Load u,v coordinates of 5 points on the plane
+	clip1_vcourt_pt1 = np.loadtxt('./clip1_vcourt_br.txt')
+	clip1_vcourt_pt2 = np.loadtxt('./clip1_vcourt_nl.txt')
+	clip1_vcourt_pt3 = np.loadtxt('./clip1_vcourt_nr.txt')
+	clip1_vcourt_pt4 = np.loadtxt('./clip1_vcourt_rm.txt')
+	clip1_vcourt_pt5 = np.loadtxt('./clip1_vcourt_lm.txt')
+	# print(clip1_vcourt_pt1[0,:])
+	# clip1_p1_feet   = np.loadtxt('./clip1_p1_feet.txt')
+
+	# For clip1, use frame 1 as reference frame
+	clip1_br_ref = np.hstack((clip1_vcourt_pt1[0,:], 1))
+	clip1_nl_ref = np.hstack((clip1_vcourt_pt2[0,:], 1))
+	clip1_nr_ref = np.hstack((clip1_vcourt_pt3[0,:], 1))
+	clip1_rm_ref = np.hstack((clip1_vcourt_pt4[0,:], 1))
+	clip1_lm_ref = np.hstack((clip1_vcourt_pt5[0,:], 1))
+
+
+	# Calculate homography between camera-i and camera-0 where i represents frame number
+	# ref_frame = np.vstack((
+	# 	clip1_br_ref,
+	# 	clip1_nl_ref,
+	# 	clip1_nr_ref,
+	# 	clip1_rm_ref,
+	# 	clip1_lm_ref
+	# ))
+	# eigenvalues = []
+	H = np.zeros((3,3))
+	# for i in range(1, clip1_vcourt_pt1.shape[0]):
+	# 	cam2 = np.vstack((
+	# 		np.hstack((clip1_vcourt_pt1[i,:], 1)),
+	# 		np.hstack((clip1_vcourt_pt2[i,:], 1)),
+	# 		np.hstack((clip1_vcourt_pt3[i,:], 1)),
+	# 		np.hstack((clip1_vcourt_pt4[i,:], 1)),
+	# 		np.hstack((clip1_vcourt_pt5[i,:], 1))
+	# 	))
+	# 	(h, s) = calc_homography(ref_frame, cam2)
+	# 	eigenvalues.append(s)
+	# 	H = np.vstack((H, h))
+	# H = H[3:] # Discard first frame of 0s
+	# # Average error/noise in our Homography matrices
+	# avg = sum(eigenvalues) / len(eigenvalues)
+	# print("Averge error is %.5f: " % avg)
+	srcPts = np.vstack((
+		clip1_vcourt_pt1[0,:],
+		clip1_vcourt_pt2[0,:],
+		clip1_vcourt_pt3[0,:],
+		clip1_vcourt_pt4[0,:],
+		clip1_vcourt_pt5[0,:]
+	))
+	for i in range(1, clip1_vcourt_pt1.shape[0]):
+		dstPts = np.vstack((
+			clip1_vcourt_pt1[i,:],
+			clip1_vcourt_pt2[i,:],
+			clip1_vcourt_pt3[i,:],
+			clip1_vcourt_pt4[i,:],
+			clip1_vcourt_pt5[i,:]
+		))
+		h, mask = cv2.findHomography(srcPts, dstPts, cv2.RANSAC, 5.0)
+		H = np.vstack((H, h))
+	H = H[3:]
+	print(H)
+
+	# Initialize video writer and codecs
+	fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+	writer = cv2.VideoWriter("./clip1_panorama.avi", fourcc, 60.0, (632, 300), True)
+
+	# Piece all [u,v] together back to reference frame
+	cap = cv2.VideoCapture(CLIP1)
+	count = 0
+	num = 630 # end frame
+	plt.figure()
+	while(cap.isOpened() and count <= num):
+		mapped_coord = np.zeros((300,632,3))
+		new_img = np.zeros((300,632,3))
+		min_r = 0
+		min_c = 0
+		ret, frame = cap.read()
+		cv2.imshow("Original", frame)
+		for u2 in range(0, 300):
+			for v2 in range(0, 632):
+				new_coord = np.dot(H[3*count:3*count+3], np.matrix([u2,v2,1]).T)
+				new_coord = np.int_(np.floor(new_coord / new_coord[2])).flatten()
+				mapped_coord[u2, v2] = new_coord
+				if new_coord[0,0] < min_r: min_r = new_coord[0,0]
+				if new_coord[0,1] < min_c: min_c = new_coord[0,1]
+		# print(mapped_coord)
+		for i in range(0, 300):
+			for j in range(0, 632):
+				# print(frame[i,j])
+				try:
+					new_img[mapped_coord[i,j,0]+min_r, mapped_coord[i,j,1]+min_c,:] = frame[i,j]
+				except Exception as e:
+					print e
+					pass
+		count += 1
+		print(count)
+		new_img = cv2.convertScaleAbs(new_img)
+		new_img = cv2.medianBlur(new_img, 5)
+		# Write processed frame back to video file
+		writer.write(new_img)
+
+		cv2.imshow("Stitched", new_img)
+		key = cv2.waitKey(1) & 0xFF 
+		# if the `q` key was pressed, break from the loop
+		if key == ord("q"):
+			break
+	cap.release()
+	writer.release()
+	cv2.destroyAllWindows()
 
 def main():
 	# Specify regions of interest for tracking objects
@@ -243,38 +379,38 @@ def main():
 	# clip1_p2_feet = motion_tracking(CLIP1, ROI_CLIP1_GREEN_P2, start=0, end=720, maxCorners=1)
 	# print(clip1_p2_feet) # Take 1st corner which is left knee
 
-	pts = np.vstack((
-		VCOURT_BOT_RIGHT,
-		VCOURT_NET_LEFT,
-		VCOURT_NET_RIGHT,
-		VCOURT_RIGHT_MID,
-		VCOURT_LEFT_MID
-		))
-	H = np.zeros((3,3))
+	# pts = np.vstack((
+	# 	VCOURT_BOT_RIGHT,
+	# 	VCOURT_NET_LEFT,
+	# 	VCOURT_NET_RIGHT,
+	# 	VCOURT_RIGHT_MID,
+	# 	VCOURT_LEFT_MID
+	# 	))
+	# H = np.zeros((3,3))
 
-	clip1_vcourt_br = np.loadtxt('./clip1_vcourt_br.txt')
-	clip1_vcourt_nl = np.loadtxt('./clip1_vcourt_nl.txt')
-	clip1_vcourt_nr = np.loadtxt('./clip1_vcourt_nr.txt')
-	clip1_vcourt_rm = np.loadtxt('./clip1_vcourt_rm.txt')
-	clip1_vcourt_lm = np.loadtxt('./clip1_vcourt_lm.txt')
-	clip1_p1_feet   = np.loadtxt('./clip1_p1_feet.txt')
+	# clip1_vcourt_br = np.loadtxt('./clip1_vcourt_br.txt')
+	# clip1_vcourt_nl = np.loadtxt('./clip1_vcourt_nl.txt')
+	# clip1_vcourt_nr = np.loadtxt('./clip1_vcourt_nr.txt')
+	# clip1_vcourt_rm = np.loadtxt('./clip1_vcourt_rm.txt')
+	# clip1_vcourt_lm = np.loadtxt('./clip1_vcourt_lm.txt')
+	# clip1_p1_feet   = np.loadtxt('./clip1_p1_feet.txt')
 	# Get homography matrix for each frame
 	# for i in range(0, clip1_vcourt_br.shape[0]): # i is frame number
-	eigenvalues = []
-	for i in range(0, clip1_p1_feet.shape[0]):
-		cam = np.vstack((
-			clip1_vcourt_br[i,:], 
-			clip1_vcourt_nl[i,:],
-			clip1_vcourt_nr[i,:],
-			clip1_vcourt_rm[i,:],
-			clip1_vcourt_lm[i,:]))
-		(h, s) = calc_homography(pts, cam)
-		eigenvalues.append(s)
-		H = np.vstack((H, h))
-	H = H[3:] # Discard first frame of 0s
-	# Average error/noise in our Homography matrices
-	avg = sum(eigenvalues) / len(eigenvalues)
-	print("Averge error is %.2f: " % avg)
+	# eigenvalues = []
+	# for i in range(0, clip1_p1_feet.shape[0]):
+	# 	cam = np.vstack((
+	# 		clip1_vcourt_br[i,:], 
+	# 		clip1_vcourt_nl[i,:],
+	# 		clip1_vcourt_nr[i,:],
+	# 		clip1_vcourt_rm[i,:],
+	# 		clip1_vcourt_lm[i,:]))
+	# 	(h, s) = calc_homography(pts, cam)
+	# 	eigenvalues.append(s)
+	# 	H = np.vstack((H, h))
+	# H = H[3:] # Discard first frame of 0s
+	# # Average error/noise in our Homography matrices
+	# avg = sum(eigenvalues) / len(eigenvalues)
+	# print("Averge error is %.2f: " % avg)
 
 	# Get plane coordinates for each player position in the image
 	# PLAYER_COORDS = np.zeros((1,3))
@@ -286,7 +422,7 @@ def main():
 	# plot_player(pts)
 
 	# Verify H by getting back reference pts in plane coordinates
-	REF_COORDS = np.zeros((1,3))
+	# REF_COORDS = np.zeros((1,3))
 	# for i in range(0, clip1_p1_feet.shape[0]):
 	# 	coord = get_plane_coordinates(H[3*i:3*i+3], np.hstack((clip1_vcourt_br[i,:],1)))
 	# 	REF_COORDS = np.vstack((REF_COORDS, coord))
@@ -311,11 +447,11 @@ def main():
 	# print(REF_COORDS)
 	# plot_player(REF_COORDS[1:])
 
-	for i in range(0, clip1_p1_feet.shape[0]):
-		coord = get_plane_coordinates(H[3*i:3*i+3], np.hstack((clip1_vcourt_lm[i,:],1)))
-		REF_COORDS = np.vstack((REF_COORDS, coord))
-	print(REF_COORDS)
-	plot_player(REF_COORDS[1:])
+	# for i in range(0, clip1_p1_feet.shape[0]):
+	# 	coord = get_plane_coordinates(H[3*i:3*i+3], np.hstack((clip1_vcourt_lm[i,:],1)))
+	# 	REF_COORDS = np.vstack((REF_COORDS, coord))
+	# print(REF_COORDS)
+	# plot_player(REF_COORDS[1:])
 
 	# get_bg(CLIP1)
 	# cap = cv2.VideoCapture(CLIP1)
@@ -328,6 +464,8 @@ def main():
 	# 	ret, frame = cap.read()
 	# cap.release()
 	# cv2.destroyAllWindows()
+
+	constructPanorama()
 
 if __name__ == "__main__":
 	main()

@@ -1,6 +1,9 @@
 import numpy as np
 import cv2
-import cv2.cv as cv
+try:
+    import cv2.cv as cv
+except ImportError as e:
+    import cv2 as cv
 from matplotlib import pyplot as plt
 
 def findGoodMatches(img1, img2):
@@ -63,10 +66,10 @@ def cal_homography(img1, img2):
 
 def constructPanorama(clipFileName):
     cap = cv2.VideoCapture(clipFileName)
-    fw = int(cap.get(cv.CV_CAP_PROP_FRAME_WIDTH))
-    fh = int(cap.get(cv.CV_CAP_PROP_FRAME_HEIGHT))
-    fps = int(cap.get(cv.CV_CAP_PROP_FPS))
-    fc = int(cap.get(cv.CV_CAP_PROP_FRAME_COUNT))
+    fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    fc = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     image = np.zeros([fw, fh, 3])
 
     img1 = cap.read()[1][:, :, :]
