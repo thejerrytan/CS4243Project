@@ -7,8 +7,7 @@ from homography import *
 from corner import *
 from roi import *
 from imutils.video import VideoStream
-import argparse
-import imutils
+import time
 np.seterr(divide='ignore', invalid='ignore')
 np.set_printoptions(threshold=np.inf)
 
@@ -289,44 +288,64 @@ def constructPanorama():
 		h, mask = cv2.findHomography(srcPts, dstPts, cv2.RANSAC, 5.0)
 		H = np.vstack((H, h))
 	H = H[3:]
-	print(H)
+	# print(H)
 
 	# Initialize video writer and codecs
 	fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-	writer = cv2.VideoWriter("./clip1_panorama.avi", fourcc, 60.0, (632, 300), True)
+	writer = cv2.VideoWriter("./clip1_panorama.avi", fourcc, 60.0, (1400, 600), True)
 
 	# Piece all [u,v] together back to reference frame
 	cap = cv2.VideoCapture(CLIP1)
 	count = 0
 	num = 630 # end frame
 	plt.figure()
+	NUM_PIXELS = 300 * 632
+	stacked_u = np.zeros((3, NUM_PIXELS))
+	index = 0
+	offset_u = 150
+	offset_v = 450
+	skip = 500
+	for u2 in range(0, 300):
+		for v2 in range(0, 632):
+			stacked_u[0:3, index] = np.array([u2,v2,1])
+			index += 1
 	while(cap.isOpened() and count <= num):
-		mapped_coord = np.zeros((300,632,3))
-		new_img = np.zeros((300,632,3))
-		min_r = 0
-		min_c = 0
 		ret, frame = cap.read()
 		cv2.imshow("Original", frame)
-		for u2 in range(0, 300):
-			for v2 in range(0, 632):
-				new_coord = np.dot(H[3*count:3*count+3], np.matrix([u2,v2,1]).T)
-				new_coord = np.int_(np.floor(new_coord / new_coord[2])).flatten()
-				mapped_coord[u2, v2] = new_coord
-				if new_coord[0,0] < min_r: min_r = new_coord[0,0]
-				if new_coord[0,1] < min_c: min_c = new_coord[0,1]
-		# print(mapped_coord)
+		if count < skip:
+			count +=1
+			continue
+		mapped_coord = np.zeros((300,632,3))
+		new_img = np.full((600,1400,3), 255, dtype='uint8')
+		min_r = 0
+		min_c = 0
+		start = time.time()
+		for pixel in range(0, NUM_PIXELS):
+			original_coords = stacked_u[0:3, pixel]
+			stacked_h = H[3*count:3*count+3]
+			new_coord = np.dot(stacked_h, np.reshape(original_coords, (3,1)))
+			new_coord = np.int_(np.floor(new_coord)).flatten()
+			mapped_coord[original_coords[0], original_coords[1]] = new_coord
+			# print(mapped_coord[original_coords[0], original_coords[1]])
+			if new_coord[0] < min_r: min_r = new_coord[0]
+			if new_coord[1] < min_c: min_c = new_coord[1]
+		time_mapped = time.time() - start
+		print("Time taken to map coords: %.2f" % (time_mapped))
+		start = time.time()
 		for i in range(0, 300):
 			for j in range(0, 632):
-				# print(frame[i,j])
 				try:
-					new_img[mapped_coord[i,j,0]+min_r, mapped_coord[i,j,1]+min_c,:] = frame[i,j]
+					new_u = mapped_coord[i,j,0] + offset_u + min_r
+					new_v = mapped_coord[i,j,1] + offset_v + min_c
+					new_img[new_u, new_v, :] = frame[i,j]
 				except Exception as e:
 					print e
 					pass
+		print("Time taken to draw: %2.f" % (time.time() - start))
 		count += 1
-		print(count)
+		print("Frame : %d " % count)
 		new_img = cv2.convertScaleAbs(new_img)
-		new_img = cv2.medianBlur(new_img, 5)
+		# new_img = cv2.medianBlur(new_img, 3)
 		# Write processed frame back to video file
 		writer.write(new_img)
 
