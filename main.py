@@ -148,51 +148,32 @@ def plot_player(pts):
 	raw_input()
 
 def constructPanorama(filename, skip=0, end=630):
-	# show_frame_in_matplot(CLIP1, 0)
-	# ROI_CLIP1_RAND_PT1 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT1['x'], CLIP1_VCOURT_RAND_PT1['y'], CLIP1_VCOURT_RAND_PT1['w'], CLIP1_VCOURT_RAND_PT1['h'])
-	# ROI_CLIP1_RAND_PT2 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT2['x'], CLIP1_VCOURT_RAND_PT2['y'], CLIP1_VCOURT_RAND_PT2['w'], CLIP1_VCOURT_RAND_PT2['h'])
-	# ROI_CLIP1_RAND_PT3 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT3['x'], CLIP1_VCOURT_RAND_PT3['y'], CLIP1_VCOURT_RAND_PT3['w'], CLIP1_VCOURT_RAND_PT3['h'])
-	# ROI_CLIP1_RAND_PT4 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT4['x'], CLIP1_VCOURT_RAND_PT4['y'], CLIP1_VCOURT_RAND_PT4['w'], CLIP1_VCOURT_RAND_PT4['h'])
-	# ROI_CLIP1_RAND_PT5 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT5['x'], CLIP1_VCOURT_RAND_PT5['y'], CLIP1_VCOURT_RAND_PT5['w'], CLIP1_VCOURT_RAND_PT5['h'])
+	ROI_CLIP1_RAND_PT1 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT1['x'], CLIP1_VCOURT_RAND_PT1['y'], CLIP1_VCOURT_RAND_PT1['w'], CLIP1_VCOURT_RAND_PT1['h'])
+	ROI_CLIP1_RAND_PT2 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT2['x'], CLIP1_VCOURT_RAND_PT2['y'], CLIP1_VCOURT_RAND_PT2['w'], CLIP1_VCOURT_RAND_PT2['h'])
+	ROI_CLIP1_RAND_PT3 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT3['x'], CLIP1_VCOURT_RAND_PT3['y'], CLIP1_VCOURT_RAND_PT3['w'], CLIP1_VCOURT_RAND_PT3['h'])
+	ROI_CLIP1_RAND_PT4 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT4['x'], CLIP1_VCOURT_RAND_PT4['y'], CLIP1_VCOURT_RAND_PT4['w'], CLIP1_VCOURT_RAND_PT4['h'])
+	ROI_CLIP1_RAND_PT5 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT5['x'], CLIP1_VCOURT_RAND_PT5['y'], CLIP1_VCOURT_RAND_PT5['w'], CLIP1_VCOURT_RAND_PT5['h'])
 
-	# clip1_vcourt_pt1 = motion_tracking(CLIP1, ROI_CLIP1_RAND_PT1, start=0, end=630, maxCorners=1)
-	# clip1_vcourt_pt2 = motion_tracking(CLIP1, ROI_CLIP1_RAND_PT2, start=0, end=630, maxCorners=1)
-	# clip1_vcourt_pt3 = motion_tracking(CLIP1, ROI_CLIP1_RAND_PT3, start=0, end=630, maxCorners=1)
-	# clip1_vcourt_pt4 = motion_tracking(CLIP1, ROI_CLIP1_RAND_PT4, start=0, end=630, maxCorners=1)
-	# clip1_vcourt_pt5 = motion_tracking(CLIP1, ROI_CLIP1_RAND_PT5, start=0, end=630, maxCorners=1)
+	clip1_vcourt_pt1 = motion_tracking(CLIP1, ROI_CLIP1_RAND_PT1, start=0, end=630, maxCorners=1)
+	clip1_vcourt_pt2 = motion_tracking(CLIP1, ROI_CLIP1_RAND_PT2, start=0, end=630, maxCorners=1)
+	clip1_vcourt_pt3 = motion_tracking(CLIP1, ROI_CLIP1_RAND_PT3, start=0, end=630, maxCorners=1)
+	clip1_vcourt_pt4 = motion_tracking(CLIP1, ROI_CLIP1_RAND_PT4, start=0, end=630, maxCorners=1)
+	clip1_vcourt_pt5 = motion_tracking(CLIP1, ROI_CLIP1_RAND_PT5, start=0, end=630, maxCorners=1)
 
-	# np.savetxt('./clip1_vcourt_br.txt', clip1_vcourt_pt1)
-	# np.savetxt('./clip1_vcourt_nl.txt', clip1_vcourt_pt2)
-	# np.savetxt('./clip1_vcourt_nr.txt', clip1_vcourt_pt3)
-	# np.savetxt('./clip1_vcourt_rm.txt', clip1_vcourt_pt4)
-	# np.savetxt('./clip1_vcourt_lm.txt', clip1_vcourt_pt5)
+	np.savetxt('./clip1_vcourt_pt1.txt', clip1_vcourt_pt1)
+	np.savetxt('./clip1_vcourt_pt2.txt', clip1_vcourt_pt2)
+	np.savetxt('./clip1_vcourt_pt3.txt', clip1_vcourt_pt3)
+	np.savetxt('./clip1_vcourt_pt4.txt', clip1_vcourt_pt4)
+	np.savetxt('./clip1_vcourt_pt5.txt', clip1_vcourt_pt5)
 
 	# Load u,v coordinates of 5 points on the plane
-	clip1_vcourt_pt1 = np.loadtxt('./clip1_vcourt_br.txt')
-	clip1_vcourt_pt2 = np.loadtxt('./clip1_vcourt_nl.txt')
-	clip1_vcourt_pt3 = np.loadtxt('./clip1_vcourt_nr.txt')
-	clip1_vcourt_pt4 = np.loadtxt('./clip1_vcourt_rm.txt')
-	clip1_vcourt_pt5 = np.loadtxt('./clip1_vcourt_lm.txt')
-	# print(clip1_vcourt_pt1[0,:])
-	# clip1_p1_feet   = np.loadtxt('./clip1_p1_feet.txt')
+	clip1_vcourt_pt1 = np.loadtxt('./clip1_vcourt_pt1.txt')
+	clip1_vcourt_pt2 = np.loadtxt('./clip1_vcourt_pt2.txt')
+	clip1_vcourt_pt3 = np.loadtxt('./clip1_vcourt_pt3.txt')
+	clip1_vcourt_pt4 = np.loadtxt('./clip1_vcourt_pt4.txt')
+	clip1_vcourt_pt5 = np.loadtxt('./clip1_vcourt_pt5.txt')
 
-	# For clip1, use frame 1 as reference frame
-	clip1_br_ref = np.hstack((clip1_vcourt_pt1[0,:], 1))
-	clip1_nl_ref = np.hstack((clip1_vcourt_pt2[0,:], 1))
-	clip1_nr_ref = np.hstack((clip1_vcourt_pt3[0,:], 1))
-	clip1_rm_ref = np.hstack((clip1_vcourt_pt4[0,:], 1))
-	clip1_lm_ref = np.hstack((clip1_vcourt_pt5[0,:], 1))
-
-
-	# Calculate homography between camera-i and camera-0 where i represents frame number
-	# ref_frame = np.vstack((
-	# 	clip1_br_ref,
-	# 	clip1_nl_ref,
-	# 	clip1_nr_ref,
-	# 	clip1_rm_ref,
-	# 	clip1_lm_ref
-	# ))
-	# eigenvalues = []
+	# For clip1, use frame 300 as reference frame
 	H = np.zeros((3,3))
 	srcPts = np.vstack((
 		clip1_vcourt_pt1[300,:],
@@ -201,6 +182,7 @@ def constructPanorama(filename, skip=0, end=630):
 		clip1_vcourt_pt4[300,:],
 		clip1_vcourt_pt5[300,:]
 	))
+	# Calculate homography between camera-i and camera-0 where i represents frame number
 	for i in range(1, clip1_vcourt_pt1.shape[0]):
 		dstPts = np.vstack((
 			clip1_vcourt_pt1[i,:],
@@ -213,7 +195,6 @@ def constructPanorama(filename, skip=0, end=630):
 		H = np.vstack((H, h))
 	H = H[3:]
 	# print(H)
-
 
 	# Piece all [u,v] together back to reference frame
 	PAN_WIDTH = 630
@@ -312,6 +293,20 @@ def extendBorder(img, up=False, down=False, left=False, right=False):
 				img[center_v + v, u, :] = last_bot_border
 	return img
 
+def subtractBackground(filename):
+	cap  = cv2.VideoCapture(filename)
+	fgbg = cv2.bgsegm.createBackgroundSubtractorMOG()
+
+	while(1):
+		ret, frame = cap.read()
+		fgmask = fgbg.apply(frame)
+		cv2.imshow('frame', fgmask)
+		k = cv2.waitKey(30) & 0xff
+		if k == 27:
+ 			break
+	cap.release()
+	cv2.destroyAllWindows()
+
 def addPlayersToBackground(filename):
 	PAN_WIDTH  = 630
 	PAN_HEIGHT = 300
@@ -323,8 +318,6 @@ def addPlayersToBackground(filename):
 	
 	# Initialize resources
 	fgbg = cv2.createBackgroundSubtractorMOG2(varThreshold=50, detectShadows=False)
-	# fgbg = cv2.bgsegm.createBackgroundSubtractorGMG()
-	# kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(3,3))
 	fourcc = cv2.VideoWriter_fourcc(*"MJPG")
 	writer = cv2.VideoWriter(filename.split('/')[1].split('.')[0] + "_with_players.avi", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
 	ROI_mask = np.zeros((PAN_HEIGHT, PAN_WIDTH), dtype='uint8')
@@ -333,7 +326,6 @@ def addPlayersToBackground(filename):
 	while(1):
 		ret, frame = cap.read()
 		fgmask = fgbg.apply(frame)
-		# fgmask = cv2.morphologyEx(fgmask, cv2.MORPH_OPEN, kernel)
 		fgmask = cv2.bitwise_and(ROI_mask, ROI_mask, mask=fgmask)
 		bgmask = cv2.bitwise_not(fgmask)
 		foreground = cv2.bitwise_and(frame, frame, mask=fgmask)
@@ -462,9 +454,10 @@ def main():
 	# print(REF_COORDS)
 	# plot_player(REF_COORDS[1:])
 
-	# constructPanorama(CLIP1, 0, 630)
+	constructPanorama(CLIP1, 0, 630)
 	# bg = get_bg(CLIP1_PAN, repeat=[(300,400),(500,600)])
-	addPlayersToBackground(CLIP1_PAN)
+	# addPlayersToBackground(CLIP1_PAN)
+	# subtractBackground(CLIP1)
 
 if __name__ == "__main__":
 	main()
