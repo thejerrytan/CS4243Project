@@ -31,6 +31,9 @@ CLIP7 = './beachVolleyball/beachVolleyball7.mov'
 # Panoram videos
 CLIP1_PAN = './beachVolleyball1_panorama.avi'
 
+# Backgrounds
+CLIP1_PAN_BG = './beachVolleyball1_panorama_bg.jpg'
+
 # Video Dimensions - 300 x 632
 CLIP1_SHAPE = (300, 632)
 CLIP2_SHAPE = (300, 632)
@@ -56,8 +59,11 @@ VCOURT_RIGHT_MID = np.array([400,0,0])
 VCOURT_BOT_MID   = np.array([0,800,0])
 VCOURT_TOP_MID   = np.array([0,-800,0])
 
-def get_bg(filename):
-	""" Get background of image by averaging method. Only works for stationary camera and background"""
+def get_bg(filename, repeat=None):
+	""" 
+		Get background of image by averaging method. Only works for stationary camera and background
+		Repeat = list of tuples e.g. [(start, stop), (start,stop)] where we will add all the frames from start to stop again
+	"""
 	cap = cv2.VideoCapture(filename)
 	fw  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 	fh  = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -66,8 +72,16 @@ def get_bg(filename):
 	ret, frame = cap.read()
 	count  = 1
 	avgImg = np.zeros(frame.shape, dtype=np.float32)
+	if repeat is not None:
+		curr_repeat = repeat.pop(0)
+		curr_start = curr_repeat[0]
+		curr_end   = curr_repeat[1]
 	while(cap.isOpened() and ret):
 		alpha = 1.0 / count
+		if curr_start is not None and count >= curr_start and curr_end is not None and curr_end > count:
+			print("Double counting frame %d" % count)
+			cv2.accumulateWeighted(frame, avgImg, alpha)
+			cv2.accumulateWeighted(frame, avgImg, alpha)
 		cv2.accumulateWeighted(frame, avgImg, alpha)
 		print("Frame = " + str(count) + ", alpha = " + str(alpha))
 		cv2.imshow('background', avgImg)
@@ -77,13 +91,18 @@ def get_bg(filename):
 		cv2.imshow('normalized background', normImg)
 		ret, frame = cap.read()
 		count += 1
+		if curr_start is not None and curr_start < count and curr_end is not None and curr_end <= count:
+			if len(repeat) > 0:
+				curr_repeat = repeat.pop(0)
+				curr_start = curr_repeat[0]
+				curr_end   = curr_repeat[1]
 	print("Frame width       : %d" % fw)
 	print("Frame height      : %d" % fh)
 	print("Frames per second : %d" % fps)
 	print("Frame count       : %d" % fc)
-	cv2.imwrite('bg.jpg', normImg)
+	cv2.imwrite('.' + filename.split('.')[1] + '_bg.jpg', normImg)
 	cap.release()
-	# cv2.destroyAllWindows()
+	cv2.destroyAllWindows()
 	return normImg
 
 def show_frame_in_matplot(filename, num):
@@ -201,9 +220,7 @@ def constructPanorama(filename, skip=0, end=630):
 	PAN_HEIGHT = 300
 	count = 0
 	plt.figure()
-	avgImg = np.zeros((PAN_HEIGHT,PAN_WIDTH,3), dtype=np.float32)
 	new_img = np.full((PAN_HEIGHT,PAN_WIDTH,3), 255, dtype='uint8')
-	normImg = np.zeros((PAN_HEIGHT,PAN_WIDTH,3), dtype='uint8')
 	try:
 		# Initialize video writer and codecs
 		cap = cv2.VideoCapture(filename)
@@ -223,8 +240,6 @@ def constructPanorama(filename, skip=0, end=630):
 			new_img = cv2.convertScaleAbs(new_img)
 			# new_img = extendBorder(new_img)rgb(235,221,192)
 			new_img = colorBackground(new_img, (192,221,235)) # Sand color
-			# cv2.accumulateWeighted(new_img, avgImg, alpha)
-			# normImg = cv2.convertScaleAbs(avgImg)
 			# Write processed frame back to video file
 			writer.write(new_img)
 			cv2.imshow("Stitched", new_img)
@@ -243,7 +258,7 @@ def constructPanorama(filename, skip=0, end=630):
 def colorBackground(img, color):
 	""" color black background with a single constant RBG color given by color = (B, G, R)"""
 	(height, width, channel) = img.shape
-	tol = 50 # Threshold below which we treat it as black
+	tol = 10 # Threshold below which we treat it as black
 	start_left = int(width/4)
 	start_right = int(2*width/4)
 	start_top = int(height/4)
@@ -301,24 +316,25 @@ def addPlayersToBackground(filename):
 	PAN_WIDTH  = 630
 	PAN_HEIGHT = 300
 	cap  = cv2.VideoCapture(filename)
-	bg   = cv2.imread('bg.jpg',  cv2.IMREAD_COLOR)
+	bg   = cv2.imread(CLIP1_PAN_BG,  cv2.IMREAD_COLOR)
 	# Median Filtering
-	bg   = cv2.medianBlur(bg, 5)
-	cv2.imshow("Median Filtering", bg)
+	# bg   = cv2.medianBlur(bg, 3)
+	# cv2.imshow("Median Filtering", bg)
 	
 	# Initialize resources
-	fgbg = cv2.createBackgroundSubtractorMOG2(varThreshold=100, detectShadows=False)
+	fgbg = cv2.createBackgroundSubtractorMOG2(varThreshold=50, detectShadows=False)
+	# fgbg = cv2.bgsegm.createBackgroundSubtractorGMG()
+	# kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(3,3))
 	fourcc = cv2.VideoWriter_fourcc(*"MJPG")
 	writer = cv2.VideoWriter(filename.split('/')[1].split('.')[0] + "_with_players.avi", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
-
-	# Histogram equalization
-	# bg_yuv = cv2.cvtColor(bg, cv2.COLOR_BGR2YUV)
-	# bg_yuv[:,:,0] = cv2.equalizeHist(bg_yuv[:,:,0])
-	# bg = cv2.cvtColor(bg_yuv, cv2.COLOR_YUV2BGR)
-	# cv2.imshow("Histogram equalized background", bg)
+	ROI_mask = np.zeros((PAN_HEIGHT, PAN_WIDTH), dtype='uint8')
+	ROI_mask[50:155, 70:480] = 255
+	ROI_mask[100:250, 250:470] = 255
 	while(1):
 		ret, frame = cap.read()
 		fgmask = fgbg.apply(frame)
+		# fgmask = cv2.morphologyEx(fgmask, cv2.MORPH_OPEN, kernel)
+		fgmask = cv2.bitwise_and(ROI_mask, ROI_mask, mask=fgmask)
 		bgmask = cv2.bitwise_not(fgmask)
 		foreground = cv2.bitwise_and(frame, frame, mask=fgmask)
 		background = cv2.bitwise_and(bg, bg, mask=bgmask)
@@ -334,12 +350,12 @@ def addPlayersToBackground(filename):
 
 def main():
 	# Specify regions of interest for tracking objects
-	# show_frame_in_matplot(CLIP1, 0)
-	ROI_CLIP1_VCOURT_BR = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_BOT_RIGHT['x'], CLIP1_VCOURT_BOT_RIGHT['y'], CLIP1_VCOURT_BOT_RIGHT['w'], CLIP1_VCOURT_BOT_RIGHT['h'])
-	ROI_CLIP1_VCOURT_NR = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_NET_RIGHT['x'], CLIP1_VCOURT_NET_RIGHT['y'], CLIP1_VCOURT_NET_RIGHT['w'], CLIP1_VCOURT_NET_RIGHT['h'])
-	ROI_CLIP1_VCOURT_NL = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_NET_LEFT['x'], CLIP1_VCOURT_NET_LEFT['y'], CLIP1_VCOURT_NET_LEFT['w'], CLIP1_VCOURT_NET_LEFT['h'])
-	ROI_CLIP1_VCOURT_RM = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RIGHT_MID['x'], CLIP1_VCOURT_RIGHT_MID['y'], CLIP1_VCOURT_RIGHT_MID['w'], CLIP1_VCOURT_RIGHT_MID['h'])
-	ROI_CLIP1_VCOURT_LM = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_LEFT_MID['x'], CLIP1_VCOURT_LEFT_MID['y'], CLIP1_VCOURT_LEFT_MID['w'], CLIP1_VCOURT_LEFT_MID['h'])
+	# show_frame_in_matplot('./beachVolleyball1_panorama_with_players.avi', 0)
+	# ROI_CLIP1_VCOURT_BR = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_BOT_RIGHT['x'], CLIP1_VCOURT_BOT_RIGHT['y'], CLIP1_VCOURT_BOT_RIGHT['w'], CLIP1_VCOURT_BOT_RIGHT['h'])
+	# ROI_CLIP1_VCOURT_NR = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_NET_RIGHT['x'], CLIP1_VCOURT_NET_RIGHT['y'], CLIP1_VCOURT_NET_RIGHT['w'], CLIP1_VCOURT_NET_RIGHT['h'])
+	# ROI_CLIP1_VCOURT_NL = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_NET_LEFT['x'], CLIP1_VCOURT_NET_LEFT['y'], CLIP1_VCOURT_NET_LEFT['w'], CLIP1_VCOURT_NET_LEFT['h'])
+	# ROI_CLIP1_VCOURT_RM = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RIGHT_MID['x'], CLIP1_VCOURT_RIGHT_MID['y'], CLIP1_VCOURT_RIGHT_MID['w'], CLIP1_VCOURT_RIGHT_MID['h'])
+	# ROI_CLIP1_VCOURT_LM = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_LEFT_MID['x'], CLIP1_VCOURT_LEFT_MID['y'], CLIP1_VCOURT_LEFT_MID['w'], CLIP1_VCOURT_LEFT_MID['h'])
 
 	# Track image coordinates of known points on the floor plane
 	# clip1_vcourt_br = motion_tracking(CLIP1, ROI_CLIP1_VCOURT_BR, start=0, end=630, maxCorners=1, skip=(240,280))
@@ -446,14 +462,9 @@ def main():
 	# print(REF_COORDS)
 	# plot_player(REF_COORDS[1:])
 
-	constructPanorama(CLIP1, 0, 630)
-	# addPlayersToBackground(CLIP1_PAN)
-	# bg = get_bg(CLIP1_PAN)
-	# bg_yuv = cv2.cvtColor(bg, cv2.COLOR_BGR2YUV)
-	# bg_yuv[:,:,0] = cv2.equalizeHist(bg_yuv[:,:,0])
-	# bg = cv2.cvtColor(bg_yuv, cv2.COLOR_YUV2BGR)
-	# cv2.imshow("Histogram equalized background", bg)
-	# cv2.waitKey(0)
+	# constructPanorama(CLIP1, 0, 630)
+	# bg = get_bg(CLIP1_PAN, repeat=[(300,400),(500,600)])
+	addPlayersToBackground(CLIP1_PAN)
 
 if __name__ == "__main__":
 	main()
