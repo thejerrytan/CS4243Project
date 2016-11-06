@@ -6,10 +6,11 @@ import cv2
 from homography import *
 from corner import *
 from roi import *
-from imutils.video import VideoStream
+# from imutils.video import VideoStream
 import time
 np.seterr(divide='ignore', invalid='ignore')
 np.set_printoptions(threshold=np.inf)
+cv2.ocl.setUseOpenCL(False)
 
 # Acknowledgements - The team would like to acknowledge the following resources referenced in our project
 # Processing video frames and writing to video file: http://www.pyimagesearch.com/2016/02/22/writing-to-video-with-opencv/
@@ -97,88 +98,6 @@ def show_frame_in_matplot(filename, num):
 	plt.show()
 	cap.release()
 
-def motion_tracking(filename, ROI, start=0, end=None, maxCorners=3, skip=None):
-	""" 
-		Uses OpenCV to extract good corners and track the movement of those corners.
-		ROI is a mask to extract only features from this part of the image
-		start from frame no., with 1st frame in video as frame 0
-		end at frame no., with None defaulting to full video file
-		Skip = (min, max) contains a range of frame numbers with which the algorithm should skip for better results
-	"""
-	cap = cv2.VideoCapture(filename)
-	
-	# params for ShiTomasi corner detection
-	feature_params = dict( maxCorners = maxCorners,
-						   qualityLevel = 0.1,
-						   minDistance = 7,
-						   blockSize = 7 )
-	
-	# Parameters for lucas kanade optical flow
-	lk_params = dict(winSize  = (15,15),
-					maxLevel = 7,
-					criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
-	
-	# Create some random colors
-	color = np.random.randint(0,255,(100,3))
-	
-	# Take first frame and find corners in it
-	ret, old_frame = cap.read()
-	
-	old_gray = cv2.cvtColor(old_frame, cv2.COLOR_BGR2GRAY)
-	p0 = cv2.goodFeaturesToTrack(old_gray, mask = ROI, **feature_params)
-	
-	# Create a mask image for drawing purposes
-	mask = np.zeros_like(old_frame)
-   
-	count = 0
-	results = np.zeros((1,2))
-	while(1):
-
-		ret,frame = cap.read()
-		if count < start:
-			count += 1
-			continue
-		else:
-			count += 1
-
-		if skip is not None and count >= skip[0] and count <= skip[1]:
-			results = np.vstack((results, good_new))
-			continue
-
-		frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-		# calculate optical flow
-		p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray, frame_gray, p0, None, **lk_params)
-
-		# Select good points
-		good_new = p1[st==1]
-		good_old = p0[st==1]
-	
-		results = np.vstack((results, good_new))
-		# draw the tracks
-		for i,(new,old) in enumerate(zip(good_new,good_old)):
-			a,b = new.ravel()
-			c,d = old.ravel()
-			mask = cv2.line(mask, (a,b),(c,d), color[i].tolist(), 2)
-			frame = cv2.circle(frame,(a,b),5,color[i].tolist(),-1)
-		img = cv2.add(frame,mask)
-	
-		cv2.imshow('frame',img)
-		k = cv2.waitKey(1) & 0xff
-		if k == 27:
-			break
-	
-		# Now update the previous frame and previous points
-		old_gray = frame_gray.copy()
-		p0 = good_new.reshape(-1,1,2)
-
-		if end is not None and count > end:
-			break
-	cv2.destroyAllWindows()
-	cap.release()
-	# print(results)
-	return results[1:]
-
 def generate_ROI(shape, x, y, w, h):
 	""" Generates region of interest mask, shape is image size (height, width) tuple, x and y are starting coordinates"""
 	mask = np.zeros(shape, np.uint8)
@@ -194,9 +113,6 @@ def get_plane_coordinates(H, img):
 	except Exception as e:
 		print e
 		return np.zeros((3,3))
-
-def calc_alpha():
-	pass
 
 def plot_player(pts):
 	# print(np.max(pts))
@@ -259,21 +175,6 @@ def constructPanorama(filename, skip=0, end=630):
 	# ))
 	# eigenvalues = []
 	H = np.zeros((3,3))
-	# for i in range(1, clip1_vcourt_pt1.shape[0]):
-	# 	cam2 = np.vstack((
-	# 		np.hstack((clip1_vcourt_pt1[i,:], 1)),
-	# 		np.hstack((clip1_vcourt_pt2[i,:], 1)),
-	# 		np.hstack((clip1_vcourt_pt3[i,:], 1)),
-	# 		np.hstack((clip1_vcourt_pt4[i,:], 1)),
-	# 		np.hstack((clip1_vcourt_pt5[i,:], 1))
-	# 	))
-	# 	(h, s) = calc_homography(ref_frame, cam2)
-	# 	eigenvalues.append(s)
-	# 	H = np.vstack((H, h))
-	# H = H[3:] # Discard first frame of 0s
-	# # Average error/noise in our Homography matrices
-	# avg = sum(eigenvalues) / len(eigenvalues)
-	# print("Averge error is %.5f: " % avg)
 	srcPts = np.vstack((
 		clip1_vcourt_pt1[300,:],
 		clip1_vcourt_pt2[300,:],
@@ -294,44 +195,139 @@ def constructPanorama(filename, skip=0, end=630):
 	H = H[3:]
 	# print(H)
 
-	# Initialize video writer and codecs
-	fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-	writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.avi", fourcc, 60.0, (632, 300), True)
 
 	# Piece all [u,v] together back to reference frame
-	cap = cv2.VideoCapture(filename)
+	PAN_WIDTH = 630
+	PAN_HEIGHT = 300
 	count = 0
 	plt.figure()
-	NUM_PIXELS = 300 * 632
-	stacked_u = np.zeros((3, NUM_PIXELS))
-	index = 0
-	offset_u = 100
-	offset_v = 100
-	u_scale = 632
-	v_scale = 300
-	for u2 in range(0, 632):
-		for v2 in range(0, 300):
-			stacked_u[0:3, index] = np.array([u2,v2,1])
-			index += 1
-	while(cap.isOpened() and count <= end):
+	avgImg = np.zeros((PAN_HEIGHT,PAN_WIDTH,3), dtype=np.float32)
+	new_img = np.full((PAN_HEIGHT,PAN_WIDTH,3), 255, dtype='uint8')
+	normImg = np.zeros((PAN_HEIGHT,PAN_WIDTH,3), dtype='uint8')
+	try:
+		# Initialize video writer and codecs
+		cap = cv2.VideoCapture(filename)
+		fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+		writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.avi", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
+		while(cap.isOpened() and count < end):
+			ret, frame = cap.read()
+			if count < skip:
+				count +=1
+				continue
+			count += 1
+			print("Frame : %d " % count)
+			cv2.imshow("Original", frame)
+			stacked_h = H[3*count:3*count+3]
+			alpha = 1.0 / count
+			new_img = cv2.warpPerspective(frame, stacked_h, (PAN_WIDTH, PAN_HEIGHT))
+			new_img = cv2.convertScaleAbs(new_img)
+			# new_img = extendBorder(new_img)rgb(235,221,192)
+			new_img = colorBackground(new_img, (192,221,235)) # Sand color
+			# cv2.accumulateWeighted(new_img, avgImg, alpha)
+			# normImg = cv2.convertScaleAbs(avgImg)
+			# Write processed frame back to video file
+			writer.write(new_img)
+			cv2.imshow("Stitched", new_img)
+			key = cv2.waitKey(1) & 0xFF 
+			# if the `q` key was pressed, break from the loop
+			if key == ord("q"):
+				break
+	except Exception as e:
+		print e
+	finally:
+		cv2.imwrite('bg.jpg', normImg)
+		cap.release()
+		writer.release()
+		cv2.destroyAllWindows()
+
+def colorBackground(img, color):
+	""" color black background with a single constant RBG color given by color = (B, G, R)"""
+	(height, width, channel) = img.shape
+	tol = 50 # Threshold below which we treat it as black
+	start_left = int(width/4)
+	start_right = int(2*width/4)
+	start_top = int(height/4)
+	start_bot = int(2*height/4)
+	for u in range(0, start_left):
+		for v in range(0, height):
+			if np.sum(img[v,u,:]) < tol:
+				img[v,u,:] = np.array([color[0],color[1],color[2]], dtype='uint8')
+	for u in range(start_right, width):
+		for v in range(0, height):
+			if np.sum(img[v,u,:]) < tol:
+				img[v,u,:] = np.array([color[0],color[1],color[2]], dtype='uint8')
+	for u in range(start_left, start_right):
+		for v in range(0, start_top):
+			if np.sum(img[v,u,:]) < tol:
+				img[v,u,:] = np.array([color[0],color[1],color[2]], dtype='uint8')
+	for u in range(start_left, start_right):
+		for v in range(start_bot, height):
+			if np.sum(img[v,u,:]) < tol:
+				img[v,u,:] = np.array([color[0],color[1],color[2]], dtype='uint8')
+	return img
+
+def extendBorder(img, up=False, down=False, left=False, right=False):
+	""" Fill zeros with last border"""
+	(height, width, channel) = img.shape
+	# Start from center, traverse column wise
+	center_u = int(width/2)
+	center_v = int(height/2)
+	for u in range(0, width):
+		last_top_border = np.array([0,0,0], dtype='uint8')
+		last_bot_border = np.array([0,0,0], dtype='uint8')
+		top_v = center_v
+		bot_v = center_v
+		for v in range(0, int(math.floor(-height/2)), -1):
+			if np.sum(img[center_v + v, u, :]) == 0:
+				top_v = v
+				break
+			else:
+				last_top_border = img[center_v + v, u, :]
+		if top_v != center_v:
+			for v in range(top_v, int(math.floor(-height/2)), -1):
+				img[center_v + v, u, :] = last_top_border
+		for v in range(0, int(math.floor(height/2))):
+			if np.sum(img[center_v + v, u, :]) == 0:
+				bot_v = v
+				break
+			else:
+				last_bot_border = img[center_v + v, u, :]
+		if bot_v != center_v:
+			for v in range(bot_v, int(math.floor(height/2))):
+				img[center_v + v, u, :] = last_bot_border
+	return img
+
+def addPlayersToBackground(filename):
+	PAN_WIDTH  = 630
+	PAN_HEIGHT = 300
+	cap  = cv2.VideoCapture(filename)
+	bg   = cv2.imread('bg.jpg',  cv2.IMREAD_COLOR)
+	# Median Filtering
+	bg   = cv2.medianBlur(bg, 5)
+	cv2.imshow("Median Filtering", bg)
+	
+	# Initialize resources
+	fgbg = cv2.createBackgroundSubtractorMOG2(varThreshold=100, detectShadows=False)
+	fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+	writer = cv2.VideoWriter(filename.split('/')[1].split('.')[0] + "_with_players.avi", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
+
+	# Histogram equalization
+	# bg_yuv = cv2.cvtColor(bg, cv2.COLOR_BGR2YUV)
+	# bg_yuv[:,:,0] = cv2.equalizeHist(bg_yuv[:,:,0])
+	# bg = cv2.cvtColor(bg_yuv, cv2.COLOR_YUV2BGR)
+	# cv2.imshow("Histogram equalized background", bg)
+	while(1):
 		ret, frame = cap.read()
-		cv2.imshow("Original", frame)
-		if count < skip:
-			count +=1
-			continue
-		new_img = np.full((300,632,3), 255, dtype='uint8')
-		stacked_h = H[3*count:3*count+3]
-		new_img = cv2.warpPerspective(frame, stacked_h, (632, 300))
-		count += 1
-		print("Frame : %d " % count)
-		new_img = cv2.convertScaleAbs(new_img)
-		# Write processed frame back to video file
-		writer.write(new_img)
-		cv2.imshow("Stitched", new_img)
-		key = cv2.waitKey(1) & 0xFF 
-		# if the `q` key was pressed, break from the loop
-		if key == ord("q"):
-			break
+		fgmask = fgbg.apply(frame)
+		bgmask = cv2.bitwise_not(fgmask)
+		foreground = cv2.bitwise_and(frame, frame, mask=fgmask)
+		background = cv2.bitwise_and(bg, bg, mask=bgmask)
+		combined = cv2.add(foreground, background)
+		cv2.imshow('frame', combined)
+		writer.write(combined)
+		k = cv2.waitKey(30) & 0xff
+		if k == 27:
+ 			break
 	cap.release()
 	writer.release()
 	cv2.destroyAllWindows()
@@ -450,25 +446,14 @@ def main():
 	# print(REF_COORDS)
 	# plot_player(REF_COORDS[1:])
 
-	# get_bg(CLIP1)
-	# cap = cv2.VideoCapture(CLIP1)
-	# ret, frame = cap.read()
-	# while cap.isOpened() and ret:
-	# 	bw = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-	# 	# (corner, x, y) = harris_corner(bw)
-	# 	cv2.imshow('background', frame)
-	# 	cv2.waitKey(25)
-	# 	ret, frame = cap.read()
-	# cap.release()
-	# cv2.destroyAllWindows()
-
-	# constructPanorama(CLIP1, 0, 630)
-	bg = get_bg(CLIP1_PAN)
-	bg_yuv = cv2.cvtColor(bg, cv2.COLOR_BGR2YUV)
-	bg_yuv[:,:,0] = cv2.equalizeHist(bg_yuv[:,:,0])
-	bg = cv2.cvtColor(bg_yuv, cv2.COLOR_YUV2BGR)
-	cv2.imshow("Histogram equalized background", bg)
-	cv2.waitKey(0)
+	constructPanorama(CLIP1, 0, 630)
+	# addPlayersToBackground(CLIP1_PAN)
+	# bg = get_bg(CLIP1_PAN)
+	# bg_yuv = cv2.cvtColor(bg, cv2.COLOR_BGR2YUV)
+	# bg_yuv[:,:,0] = cv2.equalizeHist(bg_yuv[:,:,0])
+	# bg = cv2.cvtColor(bg_yuv, cv2.COLOR_YUV2BGR)
+	# cv2.imshow("Histogram equalized background", bg)
+	# cv2.waitKey(0)
 
 if __name__ == "__main__":
 	main()
