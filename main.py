@@ -28,7 +28,7 @@ CLIP6 = './beachVolleyball/beachVolleyball6.mov'
 CLIP7 = './beachVolleyball/beachVolleyball7.mov'
 
 # Panoram videos
-CLIP1_PAN = './clip1_panorama.avi'
+CLIP1_PAN = './beachVolleyball1_panorama.avi'
 
 # Video Dimensions - 300 x 632
 CLIP1_SHAPE = (300, 632)
@@ -82,7 +82,8 @@ def get_bg(filename):
 	print("Frame count       : %d" % fc)
 	cv2.imwrite('bg.jpg', normImg)
 	cap.release()
-	cv2.destroyAllWindows()
+	# cv2.destroyAllWindows()
+	return normImg
 
 def show_frame_in_matplot(filename, num):
 	""" Show frame number from filename in matplot"""
@@ -295,7 +296,7 @@ def constructPanorama(filename, skip=0, end=630):
 
 	# Initialize video writer and codecs
 	fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-	writer = cv2.VideoWriter(filename + "panorama.avi", fourcc, 60.0, (832, 500), True)
+	writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.avi", fourcc, 60.0, (632, 300), True)
 
 	# Piece all [u,v] together back to reference frame
 	cap = cv2.VideoCapture(filename)
@@ -318,45 +319,14 @@ def constructPanorama(filename, skip=0, end=630):
 		if count < skip:
 			count +=1
 			continue
-		mapped_coord = np.zeros((300,632,3))
-		new_img = np.full((500,832,3), 255, dtype='uint8')
-		min_u = min_v = max_u = max_v = 0
-		start = time.time()
-		for pixel in range(0, NUM_PIXELS):
-			original_coords = stacked_u[0:3, pixel]
-			stacked_h = H[3*count:3*count+3]
-			new_coord = np.dot(stacked_h, np.reshape(original_coords, (3,1)))
-			new_coord = np.int_(np.floor(new_coord)).flatten()
-			mapped_coord[original_coords[1], original_coords[0]] = new_coord
-			# print(mapped_coord[original_coords[0], original_coords[1]])
-			if new_coord[0] < min_u: min_u = new_coord[0]
-			if new_coord[1] < min_v: min_v = new_coord[1]
-			if new_coord[0] > max_u: max_u = new_coord[0]
-			if new_coord[1] > max_v: max_v = new_coord[1]
-		new_v_scale = max_v - min_v
-		new_u_scale = max_u - min_u
-		print("New v scale: %d" % new_v_scale)
-		print("New u scale: %d" % new_u_scale)
-		time_mapped = time.time() - start
-		print("Time taken to map coords: %.2f" % (time_mapped))
-		start = time.time()
-		for v in range(0, 300):
-			for u in range(0, 632):
-				try:
-					new_u = np.round((mapped_coord[v,u,0] - min_u) / new_u_scale * u_scale) + offset_u
-					new_v = np.round((mapped_coord[v,u,1] - min_v) / new_v_scale * v_scale) + offset_v
-					new_img[new_v, new_u, :] = frame[v,u]
-				except Exception as e:
-					print e
-					pass
-		print("Time taken to draw: %2.f" % (time.time() - start))
+		new_img = np.full((300,632,3), 255, dtype='uint8')
+		stacked_h = H[3*count:3*count+3]
+		new_img = cv2.warpPerspective(frame, stacked_h, (632, 300))
 		count += 1
 		print("Frame : %d " % count)
 		new_img = cv2.convertScaleAbs(new_img)
-		# new_img = cv2.medianBlur(new_img, 5)
 		# Write processed frame back to video file
 		writer.write(new_img)
-
 		cv2.imshow("Stitched", new_img)
 		key = cv2.waitKey(1) & 0xFF 
 		# if the `q` key was pressed, break from the loop
@@ -492,9 +462,13 @@ def main():
 	# cap.release()
 	# cv2.destroyAllWindows()
 
-	constructPanorama(CLIP1, 300, 400)
-	# get_bg(CLIP1_PAN)
-
+	# constructPanorama(CLIP1, 0, 630)
+	bg = get_bg(CLIP1_PAN)
+	bg_yuv = cv2.cvtColor(bg, cv2.COLOR_BGR2YUV)
+	bg_yuv[:,:,0] = cv2.equalizeHist(bg_yuv[:,:,0])
+	bg = cv2.cvtColor(bg_yuv, cv2.COLOR_YUV2BGR)
+	cv2.imshow("Histogram equalized background", bg)
+	cv2.waitKey(0)
 
 if __name__ == "__main__":
 	main()
