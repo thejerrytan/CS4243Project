@@ -27,6 +27,9 @@ CLIP5 = './beachVolleyball/beachVolleyball5.mov'
 CLIP6 = './beachVolleyball/beachVolleyball6.mov'
 CLIP7 = './beachVolleyball/beachVolleyball7.mov'
 
+# Panoram videos
+CLIP1_PAN = './clip1_panorama.avi'
+
 # Video Dimensions - 300 x 632
 CLIP1_SHAPE = (300, 632)
 CLIP2_SHAPE = (300, 632)
@@ -208,7 +211,7 @@ def plot_player(pts):
 		plt.pause(0.016)
 	raw_input()
 
-def constructPanorama():
+def constructPanorama(filename, skip=0, end=630):
 	# show_frame_in_matplot(CLIP1, 0)
 	# ROI_CLIP1_RAND_PT1 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT1['x'], CLIP1_VCOURT_RAND_PT1['y'], CLIP1_VCOURT_RAND_PT1['w'], CLIP1_VCOURT_RAND_PT1['h'])
 	# ROI_CLIP1_RAND_PT2 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT2['x'], CLIP1_VCOURT_RAND_PT2['y'], CLIP1_VCOURT_RAND_PT2['w'], CLIP1_VCOURT_RAND_PT2['h'])
@@ -271,11 +274,11 @@ def constructPanorama():
 	# avg = sum(eigenvalues) / len(eigenvalues)
 	# print("Averge error is %.5f: " % avg)
 	srcPts = np.vstack((
-		clip1_vcourt_pt1[0,:],
-		clip1_vcourt_pt2[0,:],
-		clip1_vcourt_pt3[0,:],
-		clip1_vcourt_pt4[0,:],
-		clip1_vcourt_pt5[0,:]
+		clip1_vcourt_pt1[300,:],
+		clip1_vcourt_pt2[300,:],
+		clip1_vcourt_pt3[300,:],
+		clip1_vcourt_pt4[300,:],
+		clip1_vcourt_pt5[300,:]
 	))
 	for i in range(1, clip1_vcourt_pt1.shape[0]):
 		dstPts = np.vstack((
@@ -285,59 +288,64 @@ def constructPanorama():
 			clip1_vcourt_pt4[i,:],
 			clip1_vcourt_pt5[i,:]
 		))
-		h, mask = cv2.findHomography(srcPts, dstPts, cv2.RANSAC, 5.0)
+		h, mask = cv2.findHomography(dstPts, srcPts, cv2.RANSAC, 5.0)
 		H = np.vstack((H, h))
 	H = H[3:]
 	# print(H)
 
 	# Initialize video writer and codecs
 	fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-	writer = cv2.VideoWriter("./clip1_panorama.avi", fourcc, 60.0, (1400, 600), True)
+	writer = cv2.VideoWriter(filename + "panorama.avi", fourcc, 60.0, (832, 500), True)
 
 	# Piece all [u,v] together back to reference frame
-	cap = cv2.VideoCapture(CLIP1)
+	cap = cv2.VideoCapture(filename)
 	count = 0
-	num = 630 # end frame
 	plt.figure()
 	NUM_PIXELS = 300 * 632
 	stacked_u = np.zeros((3, NUM_PIXELS))
 	index = 0
-	offset_u = 150
-	offset_v = 450
-	skip = 500
-	for u2 in range(0, 300):
-		for v2 in range(0, 632):
+	offset_u = 100
+	offset_v = 100
+	u_scale = 632
+	v_scale = 300
+	for u2 in range(0, 632):
+		for v2 in range(0, 300):
 			stacked_u[0:3, index] = np.array([u2,v2,1])
 			index += 1
-	while(cap.isOpened() and count <= num):
+	while(cap.isOpened() and count <= end):
 		ret, frame = cap.read()
 		cv2.imshow("Original", frame)
 		if count < skip:
 			count +=1
 			continue
 		mapped_coord = np.zeros((300,632,3))
-		new_img = np.full((600,1400,3), 255, dtype='uint8')
-		min_r = 0
-		min_c = 0
+		new_img = np.full((500,832,3), 255, dtype='uint8')
+		min_u = min_v = max_u = max_v = 0
 		start = time.time()
 		for pixel in range(0, NUM_PIXELS):
 			original_coords = stacked_u[0:3, pixel]
 			stacked_h = H[3*count:3*count+3]
 			new_coord = np.dot(stacked_h, np.reshape(original_coords, (3,1)))
 			new_coord = np.int_(np.floor(new_coord)).flatten()
-			mapped_coord[original_coords[0], original_coords[1]] = new_coord
+			mapped_coord[original_coords[1], original_coords[0]] = new_coord
 			# print(mapped_coord[original_coords[0], original_coords[1]])
-			if new_coord[0] < min_r: min_r = new_coord[0]
-			if new_coord[1] < min_c: min_c = new_coord[1]
+			if new_coord[0] < min_u: min_u = new_coord[0]
+			if new_coord[1] < min_v: min_v = new_coord[1]
+			if new_coord[0] > max_u: max_u = new_coord[0]
+			if new_coord[1] > max_v: max_v = new_coord[1]
+		new_v_scale = max_v - min_v
+		new_u_scale = max_u - min_u
+		print("New v scale: %d" % new_v_scale)
+		print("New u scale: %d" % new_u_scale)
 		time_mapped = time.time() - start
 		print("Time taken to map coords: %.2f" % (time_mapped))
 		start = time.time()
-		for i in range(0, 300):
-			for j in range(0, 632):
+		for v in range(0, 300):
+			for u in range(0, 632):
 				try:
-					new_u = mapped_coord[i,j,0] + offset_u + min_r
-					new_v = mapped_coord[i,j,1] + offset_v + min_c
-					new_img[new_u, new_v, :] = frame[i,j]
+					new_u = np.round((mapped_coord[v,u,0] - min_u) / new_u_scale * u_scale) + offset_u
+					new_v = np.round((mapped_coord[v,u,1] - min_v) / new_v_scale * v_scale) + offset_v
+					new_img[new_v, new_u, :] = frame[v,u]
 				except Exception as e:
 					print e
 					pass
@@ -345,7 +353,7 @@ def constructPanorama():
 		count += 1
 		print("Frame : %d " % count)
 		new_img = cv2.convertScaleAbs(new_img)
-		# new_img = cv2.medianBlur(new_img, 3)
+		# new_img = cv2.medianBlur(new_img, 5)
 		# Write processed frame back to video file
 		writer.write(new_img)
 
@@ -484,7 +492,9 @@ def main():
 	# cap.release()
 	# cv2.destroyAllWindows()
 
-	constructPanorama()
+	constructPanorama(CLIP1, 300, 400)
+	# get_bg(CLIP1_PAN)
+
 
 if __name__ == "__main__":
 	main()
