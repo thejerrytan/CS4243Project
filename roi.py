@@ -3,6 +3,275 @@ import math
 import numpy.linalg as la
 import cv2
 
+PANORAMA_ROI = {
+	'clip1' : {
+		'filename'       : './beachVolleyball/beachVolleyball1.mov',
+		'start_frame'    : 0,
+		'end_frame'      : 630,
+		'original_shape' : (300, 632),
+		'panorama_shape' : (630, 300),
+		'ref_frame'      : 300,
+		'pt1' : {
+			'x' : 50,
+			'y' : 220,
+			'h' : 30,
+			'w' : 30
+		},
+		'pt2' : {
+			'x' : 50,
+			'y' : 180,
+			'h' : 30,
+			'w' : 30
+		},
+		'pt3' : {
+			'x' : 250,
+			'y' : 200,
+			'h' : 30,
+			'w' : 30
+		},
+		'pt4' : {
+			'x' : 280,
+			'y' : 80,
+			'h' : 30,
+			'w' : 30
+		},
+		'pt5' : {
+			'x' : 60,
+			'y' : 150,
+			'h' : 30,
+			'w' : 30
+		}
+	},
+	'clip2' : {
+		'filename'       : './beachVolleyball/beachVolleyball2.mov',
+		'start_frame'    : 0,
+		'end_frame'      : 550,
+		'original_shape' : (296, 636),
+		'panorama_shape' : (630, 300),
+		'ref_frame'      : 100,
+		'pt1' : {
+			'x' : 510,
+			'y' : 80,
+			'h' : 50,
+			'w' : 50
+		},
+		'pt2' : {
+			'x' : 525,
+			'y' : 120,
+			'h' : 50,
+			'w' : 50
+		},
+		'pt3' : {
+			'x' : 550,
+			'y' : 100,
+			'h' : 30,
+			'w' : 30
+		},
+		'pt4' : {
+			'x' : 565,
+			'y' : 90,
+			'h' : 30,
+			'w' : 30
+		},
+		'pt5' : {
+			'x' : 580,
+			'y' : 115,
+			'h' : 30,
+			'w' : 30
+		}
+	},
+	'clip3' : {
+		'filename'       : './beachVolleyball/beachVolleyball3.mov',
+		'start_frame'    : 0,
+		'end_frame'      : 350,
+		'original_shape' : (294, 636),
+		'panorama_shape' : (700, 300),
+		'ref_frame'      : 100,
+		'pt1' : {
+			'x' : 120,
+			'y' : 150,
+			'h' : 50,
+			'w' : 50
+		},
+		'pt2' : {
+			'x' : 250,
+			'y' : 150,
+			'h' : 50,
+			'w' : 50
+		},
+		'pt3' : {
+			'x' : 250,
+			'y' : 260,
+			'h' : 30,
+			'w' : 30
+		},
+		'pt4' : {
+			'x' : 120,
+			'y' : 250,
+			'h' : 20,
+			'w' : 20
+		},
+		'pt5' : {
+			'x' : 20,
+			'y' : 120,
+			'h' : 30,
+			'w' : 30
+		}
+	},
+	'clip4' : {
+		'filename'       : './beachVolleyball/beachVolleyball4.mov',
+		'start_frame'    : 20,
+		'end_frame'      : 600,
+		'original_shape' : (296, 638),
+		'panorama_shape' : (700, 300),
+		'ref_frame'      : 100,
+		'pt1' : {
+			'x' : 600,
+			'y' : 100,
+			'h' : 100,
+			'w' : 100
+		},
+		'pt2' : {
+			'x' : 500,
+			'y' : 130,
+			'h' : 50,
+			'w' : 50
+		},
+		'pt3' : {
+			'x' : 450,
+			'y' : 200,
+			'h' : 30,
+			'w' : 30
+		},
+		'pt4' : {
+			'x' : 350,
+			'y' : 150,
+			'h' : 20,
+			'w' : 20
+		},
+		'pt5' : {
+			'x' : 400,
+			'y' : 135,
+			'h' : 30,
+			'w' : 30
+		}
+	},
+	'clip5' : {
+		'filename'       : './beachVolleyball/beachVolleyball5.mov',
+		'start_frame'    : 0,
+		'end_frame'      : 1000,
+		'original_shape' : (354, 636),
+		'panorama_shape' : (700, 354),
+		'ref_frame'      : 500,
+		'pt1' : {
+			'x' : 460,
+			'y' : 150,
+			'h' : 100,
+			'w' : 100
+		},
+		'pt2' : {
+			'x' : 410,
+			'y' : 170,
+			'h' : 30,
+			'w' : 30
+		},
+		'pt3' : {
+			'x' : 490,
+			'y' : 170,
+			'h' : 30,
+			'w' : 30
+		},
+		'pt4' : {
+			'x' : 220,
+			'y' : 180,
+			'h' : 20,
+			'w' : 20
+		},
+		'pt5' : {
+			'x' : 200,
+			'y' : 140,
+			'h' : 30,
+			'w' : 30
+		}
+	},
+	'clip6' : {
+		'filename'       : './beachVolleyball/beachVolleyball6.mov',
+		'start_frame'    : 0,
+		'end_frame'      : 380,
+		'original_shape' : (350, 636),
+		'panorama_shape' : (700, 350),
+		'ref_frame'      : 50,
+		'pt1' : {
+			'x' : 600,
+			'y' : 100,
+			'h' : 100,
+			'w' : 100
+		},
+		'pt2' : {
+			'x' : 330,
+			'y' : 130,
+			'h' : 50,
+			'w' : 50
+		},
+		'pt3' : {
+			'x' : 360,
+			'y' : 230,
+			'h' : 30,
+			'w' : 30
+		},
+		'pt4' : {
+			'x' : 420,
+			'y' : 300,
+			'h' : 20,
+			'w' : 20
+		},
+		'pt5' : {
+			'x' : 570,
+			'y' : 270,
+			'h' : 20,
+			'w' : 20
+		}
+	},
+	'clip7' : {
+		'filename'       : './beachVolleyball/beachVolleyball7.mov',
+		'start_frame'    : 0,
+		'end_frame'      : 1000,
+		'original_shape' : (356, 638),
+		'panorama_shape' : (700, 300),
+		'ref_frame'      : 100,
+		'pt1' : {
+			'x' : 150,
+			'y' : 140,
+			'h' : 50,
+			'w' : 50
+		},
+		'pt2' : {
+			'x' : 150,
+			'y' : 290,
+			'h' : 50,
+			'w' : 50
+		},
+		'pt3' : {
+			'x' : 50,
+			'y' : 170,
+			'h' : 30,
+			'w' : 30
+		},
+		'pt4' : {
+			'x' : 150,
+			'y' : 180,
+			'h' : 20,
+			'w' : 20
+		},
+		'pt5' : {
+			'x' : 250,
+			'y' : 150,
+			'h' : 30,
+			'w' : 30
+		}
+	}
+}
+
 CLIP1_GREEN_P1_ROI = {
 	'x' : 330,
 	'y' : 180,
@@ -58,36 +327,6 @@ CLIP1_VCOURT_LEFT_MID = {
 	'h' : 15,
 	'w' : 15
 }
-CLIP1_VCOURT_RAND_PT1 = {
-	'x' : 50,
-	'y' : 220,
-	'h' : 30,
-	'w' : 30
-}
-CLIP1_VCOURT_RAND_PT2 = {
-	'x' : 50,
-	'y' : 180,
-	'h' : 30,
-	'w' : 30
-}
-CLIP1_VCOURT_RAND_PT3 = {
-	'x' : 250,
-	'y' : 200,
-	'h' : 30,
-	'w' : 30
-}
-CLIP1_VCOURT_RAND_PT4 = {
-	'x' : 280,
-	'y' : 80,
-	'h' : 30,
-	'w' : 30
-}
-CLIP1_VCOURT_RAND_PT5 = {
-	'x' : 60,
-	'y' : 150,
-	'h' : 30,
-	'w' : 30
-}
 
 def motion_tracking(filename, ROI, start=0, end=None, maxCorners=3, skip=None):
 	""" 
@@ -106,7 +345,7 @@ def motion_tracking(filename, ROI, start=0, end=None, maxCorners=3, skip=None):
 						   blockSize = 7 )
 	
 	# Parameters for lucas kanade optical flow
-	lk_params = dict(winSize  = (15,15),
+	lk_params = dict(winSize  = (30,30),
 					maxLevel = 7,
 					criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 	
@@ -115,7 +354,7 @@ def motion_tracking(filename, ROI, start=0, end=None, maxCorners=3, skip=None):
 	
 	# Take first frame and find corners in it
 	ret, old_frame = cap.read()
-	
+	print(old_frame.shape)
 	old_gray = cv2.cvtColor(old_frame, cv2.COLOR_BGR2GRAY)
 	p0 = cv2.goodFeaturesToTrack(old_gray, mask = ROI, **feature_params)
 	
@@ -127,12 +366,12 @@ def motion_tracking(filename, ROI, start=0, end=None, maxCorners=3, skip=None):
 	while(1):
 
 		ret,frame = cap.read()
+		print("Frame : %d" % int(count))
 		if count < start:
 			count += 1
 			continue
 		else:
 			count += 1
-
 		if skip is not None and count >= skip[0] and count <= skip[1]:
 			results = np.vstack((results, good_new))
 			continue

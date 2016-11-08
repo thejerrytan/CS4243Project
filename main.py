@@ -47,17 +47,17 @@ CLIP7_SHAPE = (300, 632)
 # For purposes of feature extraction, we need to identify points that are good corners and appear consistently
 # in all frames of the clip
 # Size of olympic sized beach volleyball court - 8m wide by 16m long
-VCOURT_CENTER    = np.array([0,0,0])
-VCOURT_TOP_LEFT  = np.array([-400, -800, 0])
-VCOURT_TOP_RIGHT = np.array([400, -800, 0])
-VCOURT_BOT_LEFT  = np.array([-400, 800, 0])
-VCOURT_BOT_RIGHT = np.array([400, 800, 0])
-VCOURT_NET_LEFT  = np.array([-500,0,0])
-VCOURT_NET_RIGHT = np.array([500,0,0])
-VCOURT_LEFT_MID  = np.array([-400,0,0])
-VCOURT_RIGHT_MID = np.array([400,0,0])
-VCOURT_BOT_MID   = np.array([0,800,0])
-VCOURT_TOP_MID   = np.array([0,-800,0])
+VCOURT_CENTER    = np.array([0,0])
+VCOURT_TOP_LEFT  = np.array([-400, -800])
+VCOURT_TOP_RIGHT = np.array([400, -800])
+VCOURT_BOT_LEFT  = np.array([-400, 800])
+VCOURT_BOT_RIGHT = np.array([400, 800])
+VCOURT_NET_LEFT  = np.array([-500,0])
+VCOURT_NET_RIGHT = np.array([500,0])
+VCOURT_LEFT_MID  = np.array([-400,0])
+VCOURT_RIGHT_MID = np.array([400,0])
+VCOURT_BOT_MID   = np.array([0,800])
+VCOURT_TOP_MID   = np.array([0,-800])
 
 def get_bg(filename, repeat=None):
 	""" 
@@ -138,8 +138,8 @@ def plot_player(pts):
 	# print(np.min(pts))
 	plt.figure()
 	plt.ion()
-	plt.xlim([-5000,5000])
-	plt.ylim([-10000, 10000])
+	plt.xlim([-500,500])
+	plt.ylim([-1000, 1000])
 	for i in range(0, pts.shape[0]):
 		# if pts[i,2] > -0.8 and pts[i,2] < 1.2:
 		plt.scatter(pts[i,0], pts[i,1], marker='x')
@@ -147,58 +147,75 @@ def plot_player(pts):
 		plt.pause(0.016)
 	raw_input()
 
-def constructPanorama(filename, skip=0, end=630):
-	ROI_CLIP1_RAND_PT1 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT1['x'], CLIP1_VCOURT_RAND_PT1['y'], CLIP1_VCOURT_RAND_PT1['w'], CLIP1_VCOURT_RAND_PT1['h'])
-	ROI_CLIP1_RAND_PT2 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT2['x'], CLIP1_VCOURT_RAND_PT2['y'], CLIP1_VCOURT_RAND_PT2['w'], CLIP1_VCOURT_RAND_PT2['h'])
-	ROI_CLIP1_RAND_PT3 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT3['x'], CLIP1_VCOURT_RAND_PT3['y'], CLIP1_VCOURT_RAND_PT3['w'], CLIP1_VCOURT_RAND_PT3['h'])
-	ROI_CLIP1_RAND_PT4 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT4['x'], CLIP1_VCOURT_RAND_PT4['y'], CLIP1_VCOURT_RAND_PT4['w'], CLIP1_VCOURT_RAND_PT4['h'])
-	ROI_CLIP1_RAND_PT5 = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RAND_PT5['x'], CLIP1_VCOURT_RAND_PT5['y'], CLIP1_VCOURT_RAND_PT5['w'], CLIP1_VCOURT_RAND_PT5['h'])
+def constructPanorama(clip):
+	"""
+	 	clip is one of [clip1, clip2, clip3, clip4, clip5, clip6, clip7]
+	 	ref is frame number to set as reference frame
+	"""
+	clip_num       = int(clip[-1])
+	ref_frame      = PANORAMA_ROI[clip]['ref_frame']
+	start_frame    = PANORAMA_ROI[clip]['start_frame']
+	end_frame      = PANORAMA_ROI[clip]['end_frame']
+	filename       = PANORAMA_ROI[clip]['filename']
+	original_shape = PANORAMA_ROI[clip]['original_shape']
+	pan_shape      = PANORAMA_ROI[clip]['panorama_shape']
+	pt1            = PANORAMA_ROI[clip]['pt1']
+	pt2            = PANORAMA_ROI[clip]['pt2']
+	pt3            = PANORAMA_ROI[clip]['pt3']
+	pt4            = PANORAMA_ROI[clip]['pt4']
+	pt5            = PANORAMA_ROI[clip]['pt5']
 
-	clip1_vcourt_pt1 = motion_tracking(CLIP1, ROI_CLIP1_RAND_PT1, start=0, end=630, maxCorners=1)
-	clip1_vcourt_pt2 = motion_tracking(CLIP1, ROI_CLIP1_RAND_PT2, start=0, end=630, maxCorners=1)
-	clip1_vcourt_pt3 = motion_tracking(CLIP1, ROI_CLIP1_RAND_PT3, start=0, end=630, maxCorners=1)
-	clip1_vcourt_pt4 = motion_tracking(CLIP1, ROI_CLIP1_RAND_PT4, start=0, end=630, maxCorners=1)
-	clip1_vcourt_pt5 = motion_tracking(CLIP1, ROI_CLIP1_RAND_PT5, start=0, end=630, maxCorners=1)
+	pt1_roi = generate_ROI(original_shape, pt1['x'], pt1['y'], pt1['w'], pt1['h'])
+	pt2_roi = generate_ROI(original_shape, pt2['x'], pt2['y'], pt2['w'], pt2['h'])
+	pt3_roi = generate_ROI(original_shape, pt3['x'], pt3['y'], pt3['w'], pt3['h'])
+	pt4_roi = generate_ROI(original_shape, pt4['x'], pt4['y'], pt4['w'], pt4['h'])
+	pt5_roi = generate_ROI(original_shape, pt5['x'], pt5['y'], pt5['w'], pt5['h'])
 
-	np.savetxt('./clip1_vcourt_pt1.txt', clip1_vcourt_pt1)
-	np.savetxt('./clip1_vcourt_pt2.txt', clip1_vcourt_pt2)
-	np.savetxt('./clip1_vcourt_pt3.txt', clip1_vcourt_pt3)
-	np.savetxt('./clip1_vcourt_pt4.txt', clip1_vcourt_pt4)
-	np.savetxt('./clip1_vcourt_pt5.txt', clip1_vcourt_pt5)
+	vcourt_pt1 = motion_tracking(filename, pt1_roi, start=start_frame, end=end_frame, maxCorners=1)
+	vcourt_pt2 = motion_tracking(filename, pt2_roi, start=start_frame, end=end_frame, maxCorners=1)
+	vcourt_pt3 = motion_tracking(filename, pt3_roi, start=start_frame, end=end_frame, maxCorners=1)
+	vcourt_pt4 = motion_tracking(filename, pt4_roi, start=start_frame, end=end_frame, maxCorners=1)
+	vcourt_pt5 = motion_tracking(filename, pt5_roi, start=start_frame, end=end_frame, maxCorners=1)
+
+	np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 1), vcourt_pt1)
+	np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 2), vcourt_pt2)
+	np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 3), vcourt_pt3)
+	np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 4), vcourt_pt4)
+	np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 5), vcourt_pt5)
 
 	# Load u,v coordinates of 5 points on the plane
-	clip1_vcourt_pt1 = np.loadtxt('./clip1_vcourt_pt1.txt')
-	clip1_vcourt_pt2 = np.loadtxt('./clip1_vcourt_pt2.txt')
-	clip1_vcourt_pt3 = np.loadtxt('./clip1_vcourt_pt3.txt')
-	clip1_vcourt_pt4 = np.loadtxt('./clip1_vcourt_pt4.txt')
-	clip1_vcourt_pt5 = np.loadtxt('./clip1_vcourt_pt5.txt')
+	vcourt_pt1 = np.loadtxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 1,))
+	vcourt_pt2 = np.loadtxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 2,))
+	vcourt_pt3 = np.loadtxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 3,))
+	vcourt_pt4 = np.loadtxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 4,))
+	vcourt_pt5 = np.loadtxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 5,))
 
 	# For clip1, use frame 300 as reference frame
 	H = np.zeros((3,3))
-	srcPts = np.vstack((
-		clip1_vcourt_pt1[300,:],
-		clip1_vcourt_pt2[300,:],
-		clip1_vcourt_pt3[300,:],
-		clip1_vcourt_pt4[300,:],
-		clip1_vcourt_pt5[300,:]
+	dstPts = np.vstack((
+		vcourt_pt1[ref_frame,:],
+		vcourt_pt2[ref_frame,:],
+		vcourt_pt3[ref_frame,:],
+		vcourt_pt4[ref_frame,:],
+		vcourt_pt5[ref_frame,:]
 	))
 	# Calculate homography between camera-i and camera-0 where i represents frame number
-	for i in range(1, clip1_vcourt_pt1.shape[0]):
-		dstPts = np.vstack((
-			clip1_vcourt_pt1[i,:],
-			clip1_vcourt_pt2[i,:],
-			clip1_vcourt_pt3[i,:],
-			clip1_vcourt_pt4[i,:],
-			clip1_vcourt_pt5[i,:]
+	for i in range(1, vcourt_pt1.shape[0]):
+		srcPts = np.vstack((
+			vcourt_pt1[i,:],
+			vcourt_pt2[i,:],
+			vcourt_pt3[i,:],
+			vcourt_pt4[i,:],
+			vcourt_pt5[i,:]
 		))
-		h, mask = cv2.findHomography(dstPts, srcPts, cv2.RANSAC, 5.0)
+		h, mask = cv2.findHomography(srcPts, dstPts, cv2.RANSAC, 5.0)
 		H = np.vstack((H, h))
 	H = H[3:]
 	# print(H)
 
 	# Piece all [u,v] together back to reference frame
-	PAN_WIDTH = 630
-	PAN_HEIGHT = 300
+	PAN_WIDTH = pan_shape[0]
+	PAN_HEIGHT = pan_shape[1]
 	count = 0
 	plt.figure()
 	new_img = np.full((PAN_HEIGHT,PAN_WIDTH,3), 255, dtype='uint8')
@@ -207,20 +224,19 @@ def constructPanorama(filename, skip=0, end=630):
 		cap = cv2.VideoCapture(filename)
 		fourcc = cv2.VideoWriter_fourcc(*"MJPG")
 		writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.avi", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
-		while(cap.isOpened() and count < end):
+		while(cap.isOpened() and count < end_frame):
 			ret, frame = cap.read()
-			if count < skip:
+			if count < start_frame:
 				count +=1
 				continue
 			count += 1
 			print("Frame : %d " % count)
 			cv2.imshow("Original", frame)
 			stacked_h = H[3*count:3*count+3]
-			alpha = 1.0 / count
 			new_img = cv2.warpPerspective(frame, stacked_h, (PAN_WIDTH, PAN_HEIGHT))
 			new_img = cv2.convertScaleAbs(new_img)
 			# new_img = extendBorder(new_img)rgb(235,221,192)
-			new_img = colorBackground(new_img, (192,221,235)) # Sand color
+			# new_img = colorBackground(new_img, (192,221,235)) # Sand color
 			# Write processed frame back to video file
 			writer.write(new_img)
 			cv2.imshow("Stitched", new_img)
@@ -231,7 +247,7 @@ def constructPanorama(filename, skip=0, end=630):
 	except Exception as e:
 		print e
 	finally:
-		cv2.imwrite('bg.jpg', normImg)
+		# cv2.imwrite('clip%d_bg.jpg' % (clip_num,), normImg)
 		cap.release()
 		writer.release()
 		cv2.destroyAllWindows()
@@ -295,7 +311,8 @@ def extendBorder(img, up=False, down=False, left=False, right=False):
 
 def subtractBackground(filename):
 	cap  = cv2.VideoCapture(filename)
-	fgbg = cv2.bgsegm.createBackgroundSubtractorMOG()
+	# fgbg = cv2.bgsegm.createBackgroundSubtractorMOG()
+	fgbg = cv2.createBackgroundSubtractorMOG2(varThreshold=1000)
 
 	while(1):
 		ret, frame = cap.read()
@@ -343,6 +360,7 @@ def addPlayersToBackground(filename):
 def main():
 	# Specify regions of interest for tracking objects
 	# show_frame_in_matplot('./beachVolleyball1_panorama_with_players.avi', 0)
+	# show_frame_in_matplot(CLIP5, 0)
 	# ROI_CLIP1_VCOURT_BR = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_BOT_RIGHT['x'], CLIP1_VCOURT_BOT_RIGHT['y'], CLIP1_VCOURT_BOT_RIGHT['w'], CLIP1_VCOURT_BOT_RIGHT['h'])
 	# ROI_CLIP1_VCOURT_NR = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_NET_RIGHT['x'], CLIP1_VCOURT_NET_RIGHT['y'], CLIP1_VCOURT_NET_RIGHT['w'], CLIP1_VCOURT_NET_RIGHT['h'])
 	# ROI_CLIP1_VCOURT_NL = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_NET_LEFT['x'], CLIP1_VCOURT_NET_LEFT['y'], CLIP1_VCOURT_NET_LEFT['w'], CLIP1_VCOURT_NET_LEFT['h'])
@@ -396,26 +414,25 @@ def main():
 	# clip1_vcourt_lm = np.loadtxt('./clip1_vcourt_lm.txt')
 	# clip1_p1_feet   = np.loadtxt('./clip1_p1_feet.txt')
 	# Get homography matrix for each frame
-	# for i in range(0, clip1_vcourt_br.shape[0]): # i is frame number
-	# eigenvalues = []
-	# for i in range(0, clip1_p1_feet.shape[0]):
+	# print(clip1_p1_feet.shape)
+	# print(clip1_vcourt_br.shape)
+	# for i in range(0, 500):
 	# 	cam = np.vstack((
 	# 		clip1_vcourt_br[i,:], 
 	# 		clip1_vcourt_nl[i,:],
 	# 		clip1_vcourt_nr[i,:],
 	# 		clip1_vcourt_rm[i,:],
 	# 		clip1_vcourt_lm[i,:]))
-	# 	(h, s) = calc_homography(pts, cam)
-	# 	eigenvalues.append(s)
-	# 	H = np.vstack((H, h))
+	# 	h, mask = cv2.findHomography(pts, cam, cv2.RANSAC, 5.0)
+	# 	if h is not None:
+	# 		H = np.vstack((H, h))
+	# 	else:
+	# 		print(i)
 	# H = H[3:] # Discard first frame of 0s
-	# # Average error/noise in our Homography matrices
-	# avg = sum(eigenvalues) / len(eigenvalues)
-	# print("Averge error is %.2f: " % avg)
-
+	
 	# Get plane coordinates for each player position in the image
 	# PLAYER_COORDS = np.zeros((1,3))
-	# for i in range(0, clip1_p1_feet.shape[0]):
+	# for i in range(360, clip1_p1_feet.shape[0]):
 	# 	coord = get_plane_coordinates(H[3*i:3*i+3], np.hstack((clip1_p1_feet[i,:],1)))
 	# 	PLAYER_COORDS = np.vstack((PLAYER_COORDS, coord))
 	# np.savetxt('./player.txt', PLAYER_COORDS[1:,:])
@@ -424,7 +441,7 @@ def main():
 
 	# Verify H by getting back reference pts in plane coordinates
 	# REF_COORDS = np.zeros((1,3))
-	# for i in range(0, clip1_p1_feet.shape[0]):
+	# for i in range(360, clip1_p1_feet.shape[0]):
 	# 	coord = get_plane_coordinates(H[3*i:3*i+3], np.hstack((clip1_vcourt_br[i,:],1)))
 	# 	REF_COORDS = np.vstack((REF_COORDS, coord))
 	# print(REF_COORDS)
@@ -454,10 +471,10 @@ def main():
 	# print(REF_COORDS)
 	# plot_player(REF_COORDS[1:])
 
-	constructPanorama(CLIP1, 0, 630)
+	constructPanorama('clip7')
 	# bg = get_bg(CLIP1_PAN, repeat=[(300,400),(500,600)])
 	# addPlayersToBackground(CLIP1_PAN)
-	# subtractBackground(CLIP1)
+	# subtractBackground(CLIP1_PAN)
 
 if __name__ == "__main__":
 	main()
