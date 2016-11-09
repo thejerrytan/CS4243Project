@@ -325,37 +325,6 @@ def colorBackground(img, color):
 				img[v,u,:] = np.array([color[0],color[1],color[2]], dtype='uint8')
 	return img
 
-def extendBorder(img, up=False, down=False, left=False, right=False):
-	""" Fill zeros with last border"""
-	(height, width, channel) = img.shape
-	# Start from center, traverse column wise
-	center_u = int(width/2)
-	center_v = int(height/2)
-	for u in range(0, width):
-		last_top_border = np.array([0,0,0], dtype='uint8')
-		last_bot_border = np.array([0,0,0], dtype='uint8')
-		top_v = center_v
-		bot_v = center_v
-		for v in range(0, int(math.floor(-height/2)), -1):
-			if np.sum(img[center_v + v, u, :]) == 0:
-				top_v = v
-				break
-			else:
-				last_top_border = img[center_v + v, u, :]
-		if top_v != center_v:
-			for v in range(top_v, int(math.floor(-height/2)), -1):
-				img[center_v + v, u, :] = last_top_border
-		for v in range(0, int(math.floor(height/2))):
-			if np.sum(img[center_v + v, u, :]) == 0:
-				bot_v = v
-				break
-			else:
-				last_bot_border = img[center_v + v, u, :]
-		if bot_v != center_v:
-			for v in range(bot_v, int(math.floor(height/2))):
-				img[center_v + v, u, :] = last_bot_border
-	return img
-
 def subtractBackground(filename):
 	cap  = cv2.VideoCapture(filename)
 	# fgbg = cv2.bgsegm.createBackgroundSubtractorMOG()
