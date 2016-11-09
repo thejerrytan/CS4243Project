@@ -10,7 +10,7 @@ from roi import *
 import time
 np.seterr(divide='ignore', invalid='ignore')
 np.set_printoptions(threshold=np.inf)
-cv2.ocl.setUseOpenCL(False)
+# cv2.ocl.setUseOpenCL(False)
 
 # Acknowledgements - The team would like to acknowledge the following resources referenced in our project
 # Processing video frames and writing to video file: http://www.pyimagesearch.com/2016/02/22/writing-to-video-with-opencv/
@@ -20,28 +20,6 @@ cv2.ocl.setUseOpenCL(False)
 # The volleyball court floor is used as the plane for homography calculation purposes
 # Hence, because of our choice of coordinates, the world coordinates coincide with our plane coordinates
 # with (Wx, Wy, Wz) = (Vp, Up, Zp)
-CLIP1 = './beachVolleyball/beachVolleyball1.mov'
-CLIP2 = './beachVolleyball/beachVolleyball2.mov'
-CLIP3 = './beachVolleyball/beachVolleyball3.mov'
-CLIP4 = './beachVolleyball/beachVolleyball4.mov'
-CLIP5 = './beachVolleyball/beachVolleyball5.mov'
-CLIP6 = './beachVolleyball/beachVolleyball6.mov'
-CLIP7 = './beachVolleyball/beachVolleyball7.mov'
-
-# Panorama videos
-CLIP1_PAN = './beachVolleyball1_panorama.avi'
-
-# Backgrounds
-CLIP1_PAN_BG = './beachVolleyball1_panorama_bg.jpg'
-
-# Video Dimensions - 300 x 632
-CLIP1_SHAPE = (300, 632)
-CLIP2_SHAPE = (300, 632)
-CLIP3_SHAPE = (300, 632)
-CLIP4_SHAPE = (300, 632)
-CLIP5_SHAPE = (300, 632)
-CLIP6_SHAPE = (300, 632)
-CLIP7_SHAPE = (300, 632)
 
 # Using 1 cm = 1 unit as our scale, we can write down the coordinates of 5 key points on the plane
 # For purposes of feature extraction, we need to identify points that are good corners and appear consistently
@@ -227,8 +205,8 @@ def constructPanorama(clip):
 	try:
 		# Initialize video writer and codecs
 		cap = cv2.VideoCapture(filename)
-		fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-		writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.avi", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
+		fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+		writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 24.0, (PAN_WIDTH, PAN_HEIGHT), True)
 		while(cap.isOpened() and count < end_frame):
 			ret, frame = cap.read()
 			if count < start_frame:
@@ -271,8 +249,8 @@ def mergePanWithBg(clip):
 	bg = cv2.imread(PANORAMA_ROI[clip]['panorama_bg_filename'], cv2.IMREAD_COLOR)
 	videoFile = PANORAMA_ROI[clip]['panorama_filename']
 	cap = cv2.VideoCapture(videoFile)
-	fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-	writer = cv2.VideoWriter(videoFile.split('/')[1].split('.')[0] + "_final.avi", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
+	fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+	writer = cv2.VideoWriter(videoFile.split('/')[1].split('.')[0] + "_final.mov", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
 	tol = 50
 	while(cap.isOpened() and count < end_frame):
 		ret, frame = cap.read()
@@ -351,8 +329,8 @@ def addPlayersToBackground(filename):
 	
 	# Initialize resources
 	fgbg = cv2.createBackgroundSubtractorMOG2(varThreshold=50, detectShadows=False)
-	fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-	writer = cv2.VideoWriter(filename.split('/')[1].split('.')[0] + "_with_players.avi", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
+	fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+	writer = cv2.VideoWriter(filename.split('/')[1].split('.')[0] + "_with_players.mov", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
 	ROI_mask = np.zeros((PAN_HEIGHT, PAN_WIDTH), dtype='uint8')
 	ROI_mask[50:155, 70:480] = 255
 	ROI_mask[100:250, 250:470] = 255
@@ -375,7 +353,7 @@ def addPlayersToBackground(filename):
 
 def main():
 	# Specify regions of interest for tracking objects
-	# show_frame_in_matplot('./beachVolleyball1_panorama_with_players.avi', 0)
+	# show_frame_in_matplot('./beachVolleyball1_panorama_with_players.mov', 0)
 	# show_frame_in_matplot(CLIP5, 0)
 	# ROI_CLIP1_VCOURT_BR = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_BOT_RIGHT['x'], CLIP1_VCOURT_BOT_RIGHT['y'], CLIP1_VCOURT_BOT_RIGHT['w'], CLIP1_VCOURT_BOT_RIGHT['h'])
 	# ROI_CLIP1_VCOURT_NR = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_NET_RIGHT['x'], CLIP1_VCOURT_NET_RIGHT['y'], CLIP1_VCOURT_NET_RIGHT['w'], CLIP1_VCOURT_NET_RIGHT['h'])
@@ -490,7 +468,7 @@ def main():
 	# constructPanorama('clip7')
 	# bg = get_bg('clip7')
 	# addPlayersToBackground(CLIP1_PAN)
-	mergePanWithBg('clip7')
+	mergePanWithBg('clip6')
 	# subtractBackground(CLIP1_PAN)
 
 if __name__ == "__main__":
