@@ -10,6 +10,14 @@ from roi import *
 import time
 np.seterr(divide='ignore', invalid='ignore')
 np.set_printoptions(threshold=np.inf)
+
+version_flag = 2
+if is_cv2():
+	version_flag = 2
+	import cv2.cv as cv
+elif is_cv3():
+	version_flag = 3
+
 # cv2.ocl.setUseOpenCL(False)
 
 # Acknowledgements - The team would like to acknowledge the following resources referenced in our project
@@ -154,17 +162,23 @@ def constructPanorama(clip):
 	pt4_roi = generate_ROI(original_shape, pt4['x'], pt4['y'], pt4['w'], pt4['h'])
 	pt5_roi = generate_ROI(original_shape, pt5['x'], pt5['y'], pt5['w'], pt5['h'])
 
-	vcourt_pt1 = motion_tracking(filename, pt1_roi, start=start_frame, end=end_frame, maxCorners=1)
-	vcourt_pt2 = motion_tracking(filename, pt2_roi, start=start_frame, end=end_frame, maxCorners=1)
-	vcourt_pt3 = motion_tracking(filename, pt3_roi, start=start_frame, end=end_frame, maxCorners=1)
-	vcourt_pt4 = motion_tracking(filename, pt4_roi, start=start_frame, end=end_frame, maxCorners=1)
-	vcourt_pt5 = motion_tracking(filename, pt5_roi, start=start_frame, end=end_frame, maxCorners=1)
+###################################################################################################
+# Run Once to get txt for player position and track points, load the txt file for subsequent  
+###################################################################################################
 
-	np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 1), vcourt_pt1)
-	np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 2), vcourt_pt2)
-	np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 3), vcourt_pt3)
-	np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 4), vcourt_pt4)
-	np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 5), vcourt_pt5)
+	# vcourt_pt1 = motion_tracking(filename, pt1_roi, start=start_frame, end=end_frame, maxCorners=1)
+	# vcourt_pt2 = motion_tracking(filename, pt2_roi, start=start_frame, end=end_frame, maxCorners=1)
+	# vcourt_pt3 = motion_tracking(filename, pt3_roi, start=start_frame, end=end_frame, maxCorners=1)
+	# vcourt_pt4 = motion_tracking(filename, pt4_roi, start=start_frame, end=end_frame, maxCorners=1)
+	# vcourt_pt5 = motion_tracking(filename, pt5_roi, start=start_frame, end=end_frame, maxCorners=1)
+
+	# np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 1), vcourt_pt1)
+	# np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 2), vcourt_pt2)
+	# np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 3), vcourt_pt3)
+	# np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 4), vcourt_pt4)
+	# np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 5), vcourt_pt5)
+
+###################################################################################################
 
 	# Load u,v coordinates of 5 points on the plane
 	vcourt_pt1 = np.loadtxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 1,))
@@ -205,9 +219,13 @@ def constructPanorama(clip):
 	try:
 		# Initialize video writer and codecs
 		cap = cv2.VideoCapture(filename)
-		fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-		writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 24.0, (PAN_WIDTH, PAN_HEIGHT), True)
-		while(cap.isOpened() and count < end_frame):
+		if version_flag == 3:
+			fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+			writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
+		elif version_flag == 2:
+			fourcc = cv.CV_FOURCC('m','p','4','v')
+			writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 24, (PAN_WIDTH, PAN_HEIGHT), True)
+		while(cap.isOpened() and count < end_frame-1):
 			ret, frame = cap.read()
 			if count < start_frame:
 				count +=1
@@ -230,7 +248,6 @@ def constructPanorama(clip):
 	except Exception as e:
 		print e
 	finally:
-		# cv2.imwrite('clip%d_bg.jpg' % (clip_num,), normImg)
 		cap.release()
 		writer.release()
 		cv2.destroyAllWindows()
@@ -249,8 +266,12 @@ def mergePanWithBg(clip):
 	bg = cv2.imread(PANORAMA_ROI[clip]['panorama_bg_filename'], cv2.IMREAD_COLOR)
 	videoFile = PANORAMA_ROI[clip]['panorama_filename']
 	cap = cv2.VideoCapture(videoFile)
-	fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-	writer = cv2.VideoWriter(videoFile.split('/')[1].split('.')[0] + "_final.mov", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
+	if version_flag == 3:
+		fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+		writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
+	elif version_flag == 2:
+		fourcc = cv.CV_FOURCC('m','p','4','v')
+		writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 24, (PAN_WIDTH, PAN_HEIGHT), True)
 	tol = 50
 	while(cap.isOpened() and count < end_frame):
 		ret, frame = cap.read()
@@ -355,6 +376,7 @@ def main():
 	# Specify regions of interest for tracking objects
 	# show_frame_in_matplot('./beachVolleyball1_panorama_with_players.mov', 0)
 	# show_frame_in_matplot(CLIP5, 0)
+
 	# ROI_CLIP1_VCOURT_BR = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_BOT_RIGHT['x'], CLIP1_VCOURT_BOT_RIGHT['y'], CLIP1_VCOURT_BOT_RIGHT['w'], CLIP1_VCOURT_BOT_RIGHT['h'])
 	# ROI_CLIP1_VCOURT_NR = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_NET_RIGHT['x'], CLIP1_VCOURT_NET_RIGHT['y'], CLIP1_VCOURT_NET_RIGHT['w'], CLIP1_VCOURT_NET_RIGHT['h'])
 	# ROI_CLIP1_VCOURT_NL = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_NET_LEFT['x'], CLIP1_VCOURT_NET_LEFT['y'], CLIP1_VCOURT_NET_LEFT['w'], CLIP1_VCOURT_NET_LEFT['h'])
@@ -465,10 +487,10 @@ def main():
 	# print(REF_COORDS)
 	# plot_player(REF_COORDS[1:])
 
-	# constructPanorama('clip7')
-	# bg = get_bg('clip7')
+	constructPanorama('clip7')
+	# bg = get_bg('clip6', repeat=[(300,400),(500,600)])
 	# addPlayersToBackground(CLIP1_PAN)
-	mergePanWithBg('clip6')
+	# mergePanWithBg('clip6')
 	# subtractBackground(CLIP1_PAN)
 
 if __name__ == "__main__":

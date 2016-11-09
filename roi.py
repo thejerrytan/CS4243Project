@@ -404,8 +404,12 @@ def motion_tracking(filename, ROI, start=0, end=None, maxCorners=3, skip=None):
 		for i,(new,old) in enumerate(zip(good_new,good_old)):
 			a,b = new.ravel()
 			c,d = old.ravel()
-			mask = cv2.line(mask, (a,b),(c,d), color[i].tolist(), 2)
-			frame = cv2.circle(frame,(a,b),5,color[i].tolist(),-1)
+			if is_cv3():
+				mask = cv2.line(mask, (a,b),(c,d), color[i].tolist(), 2)
+				frame = cv2.circle(frame,(a,b),5,color[i].tolist(),-1)
+			else: 
+				cv2.line(mask, (a,b),(c,d), color[i].tolist(), 2)
+				cv2.circle(frame,(a,b),5,color[i].tolist(),-1)
 		img = cv2.add(frame,mask)
 	
 		cv2.imshow('frame',img)
@@ -423,3 +427,22 @@ def motion_tracking(filename, ROI, start=0, end=None, maxCorners=3, skip=None):
 	cap.release()
 	# print(results)
 	return results[1:]
+
+def is_cv2():
+    # if we are using OpenCV 2, then our cv2.__version__ will start
+    # with '2.'
+    return check_opencv_version("2.")
+ 
+def is_cv3():
+    # if we are using OpenCV 3.X, then our cv2.__version__ will start
+    # with '3.'
+    return check_opencv_version("3.")
+ 
+def check_opencv_version(major, lib=None):
+    # if the supplied library is None, import OpenCV
+    if lib is None:
+        import cv2 as lib
+        
+    # return whether or not the current OpenCV version matches the
+    # major version number
+    return lib.__version__.startswith(major)
