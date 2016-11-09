@@ -28,7 +28,7 @@ CLIP5 = './beachVolleyball/beachVolleyball5.mov'
 CLIP6 = './beachVolleyball/beachVolleyball6.mov'
 CLIP7 = './beachVolleyball/beachVolleyball7.mov'
 
-# Panoram videos
+# Panorama videos
 CLIP1_PAN = './beachVolleyball1_panorama.avi'
 
 # Backgrounds
@@ -59,11 +59,12 @@ VCOURT_RIGHT_MID = np.array([400,0])
 VCOURT_BOT_MID   = np.array([0,800])
 VCOURT_TOP_MID   = np.array([0,-800])
 
-def get_bg(filename, repeat=None):
+def get_bg(clip, repeat=None):
 	""" 
 		Get background of image by averaging method. Only works for stationary camera and background
 		Repeat = list of tuples e.g. [(start, stop), (start,stop)] where we will add all the frames from start to stop again
 	"""
+	filename = PANORAMA_ROI[clip]['panorama_filename']
 	cap = cv2.VideoCapture(filename)
 	fw  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 	fh  = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -76,6 +77,10 @@ def get_bg(filename, repeat=None):
 		curr_repeat = repeat.pop(0)
 		curr_start = curr_repeat[0]
 		curr_end   = curr_repeat[1]
+	else:
+		curr_repeat = None
+		curr_start  = None
+		curr_end    = None
 	while(cap.isOpened() and ret):
 		alpha = 1.0 / count
 		if curr_start is not None and count >= curr_start and curr_end is not None and curr_end > count:
@@ -86,7 +91,7 @@ def get_bg(filename, repeat=None):
 		print("Frame = " + str(count) + ", alpha = " + str(alpha))
 		cv2.imshow('background', avgImg)
 		cv2.waitKey(1)
-		normImg = cv2.convertScaleAbs(avgImg)
+		normImg = cv2.convertScaleAbs(2.5 * avgImg)
 		cv2.waitKey(1)
 		cv2.imshow('normalized background', normImg)
 		ret, frame = cap.read()
@@ -251,6 +256,48 @@ def constructPanorama(clip):
 		cap.release()
 		writer.release()
 		cv2.destroyAllWindows()
+
+def mergePanWithBg(clip):
+	"""
+		Merge panorama intermediate video with averaged background
+	"""
+	pan_shape      = PANORAMA_ROI[clip]['panorama_shape']
+	start_frame    = PANORAMA_ROI[clip]['start_frame']
+	end_frame      = PANORAMA_ROI[clip]['end_frame']
+
+	PAN_WIDTH  = pan_shape[0]
+	PAN_HEIGHT = pan_shape[1]
+	count = 0
+	bg = cv2.imread(PANORAMA_ROI[clip]['panorama_bg_filename'], cv2.IMREAD_COLOR)
+	videoFile = PANORAMA_ROI[clip]['panorama_filename']
+	cap = cv2.VideoCapture(videoFile)
+	fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+	writer = cv2.VideoWriter(videoFile.split('/')[1].split('.')[0] + "_final.avi", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
+	tol = 50
+	while(cap.isOpened() and count < end_frame):
+		ret, frame = cap.read()
+		if count < start_frame:
+			count += 1
+			continue
+		count += 1
+		print("Frame : %d" % count)
+		fgmask = np.zeros((frame.shape[0],frame.shape[1]), dtype='uint8')
+		fgmask[np.where(np.sum(frame, axis=2) >= tol)] = 255
+		bgmask = np.zeros((frame.shape[0],frame.shape[1]), dtype='uint8')
+		bgmask[np.where(np.sum(frame, axis=2) < tol)] = 255
+		foreground = cv2.bitwise_and(frame, frame, mask=fgmask)
+		background = cv2.bitwise_and(bg, bg, mask=bgmask)
+		combined = cv2.add(foreground, background)
+		combined = cv2.convertScaleAbs(combined)
+		cv2.imshow("Merged", combined)
+		writer.write(combined)
+		key = cv2.waitKey(1) & 0xFF
+		# if the `q` key was pressed, break from the loop
+		if key == ord("q"):
+			break
+	cap.release()
+	writer.release()
+	cv2.destroyAllWindows()
 
 def colorBackground(img, color):
 	""" color black background with a single constant RBG color given by color = (B, G, R)"""
@@ -471,9 +518,10 @@ def main():
 	# print(REF_COORDS)
 	# plot_player(REF_COORDS[1:])
 
-	constructPanorama('clip7')
-	# bg = get_bg(CLIP1_PAN, repeat=[(300,400),(500,600)])
+	# constructPanorama('clip7')
+	# bg = get_bg('clip7')
 	# addPlayersToBackground(CLIP1_PAN)
+	mergePanWithBg('clip7')
 	# subtractBackground(CLIP1_PAN)
 
 if __name__ == "__main__":

@@ -6,6 +6,8 @@ import cv2
 PANORAMA_ROI = {
 	'clip1' : {
 		'filename'       : './beachVolleyball/beachVolleyball1.mov',
+		'panorama_filename' : './beachVolleyball1_panorama.avi',
+		'panorama_bg_filename' : './beachVolleyball1_panorama_bg.jpg',
 		'start_frame'    : 0,
 		'end_frame'      : 630,
 		'original_shape' : (300, 632),
@@ -44,6 +46,8 @@ PANORAMA_ROI = {
 	},
 	'clip2' : {
 		'filename'       : './beachVolleyball/beachVolleyball2.mov',
+		'panorama_filename' : './beachVolleyball2_panorama.avi',
+		'panorama_bg_filename' : './beachVolleyball2_panorama_bg.jpg',
 		'start_frame'    : 0,
 		'end_frame'      : 550,
 		'original_shape' : (296, 636),
@@ -82,6 +86,8 @@ PANORAMA_ROI = {
 	},
 	'clip3' : {
 		'filename'       : './beachVolleyball/beachVolleyball3.mov',
+		'panorama_filename' : './beachVolleyball3_panorama.avi',
+		'panorama_bg_filename' : './beachVolleyball3_panorama_bg.jpg',
 		'start_frame'    : 0,
 		'end_frame'      : 350,
 		'original_shape' : (294, 636),
@@ -120,6 +126,8 @@ PANORAMA_ROI = {
 	},
 	'clip4' : {
 		'filename'       : './beachVolleyball/beachVolleyball4.mov',
+		'panorama_filename' : './beachVolleyball4_panorama.avi',
+		'panorama_bg_filename' : './beachVolleyball4_panorama_bg.jpg',
 		'start_frame'    : 20,
 		'end_frame'      : 600,
 		'original_shape' : (296, 638),
@@ -158,6 +166,8 @@ PANORAMA_ROI = {
 	},
 	'clip5' : {
 		'filename'       : './beachVolleyball/beachVolleyball5.mov',
+		'panorama_filename' : './beachVolleyball5_panorama.avi',
+		'panorama_bg_filename' : './beachVolleyball5_panorama_bg.jpg',
 		'start_frame'    : 0,
 		'end_frame'      : 1000,
 		'original_shape' : (354, 636),
@@ -196,6 +206,8 @@ PANORAMA_ROI = {
 	},
 	'clip6' : {
 		'filename'       : './beachVolleyball/beachVolleyball6.mov',
+		'panorama_filename' : './beachVolleyball6_panorama.avi',
+		'panorama_bg_filename' : './beachVolleyball6_panorama_bg.jpg',
 		'start_frame'    : 0,
 		'end_frame'      : 380,
 		'original_shape' : (350, 636),
@@ -233,12 +245,14 @@ PANORAMA_ROI = {
 		}
 	},
 	'clip7' : {
-		'filename'       : './beachVolleyball/beachVolleyball7.mov',
-		'start_frame'    : 0,
-		'end_frame'      : 1000,
-		'original_shape' : (356, 638),
-		'panorama_shape' : (700, 300),
-		'ref_frame'      : 100,
+		'filename'          : './beachVolleyball/beachVolleyball7.mov',
+		'panorama_filename' : './beachVolleyball7_panorama.avi',
+		'panorama_bg_filename' : './beachVolleyball7_panorama_bg.jpg',
+		'start_frame'       : 0,
+		'end_frame'         : 1000,
+		'original_shape'    : (356, 638),
+		'panorama_shape'    : (700, 300),
+		'ref_frame'         : 100,
 		'pt1' : {
 			'x' : 150,
 			'y' : 140,
