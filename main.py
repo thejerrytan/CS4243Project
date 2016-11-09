@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division # All division is floating point
 import numpy as np
 import math
 import numpy.linalg as la
