@@ -96,13 +96,17 @@ def get_bg(clip, repeat=None):
 	cv2.destroyAllWindows()
 	return normImg
 
-def show_frame_in_matplot(filename, num):
+def show_frame_in_matplot(filename, num, roi=None):
 	""" Show frame number from filename in matplot"""
 	cap = cv2.VideoCapture(filename)
 	count = 0
 	while(cap.isOpened() and count <= num):
 		count += 1
 		ret, frame = cap.read()
+	if roi is not None:
+		top_left = (roi['x'], roi['y'])
+		bottom_right = (roi['x']+roi['w'], roi['y']+roi['h'])
+		frame = cv2.rectangle(frame, top_left, bottom_right, (0,0,255), 3)	
 	plt.figure()
 	plt.imshow(frame)
 	plt.show()
@@ -372,10 +376,72 @@ def addPlayersToBackground(filename):
 	writer.release()
 	cv2.destroyAllWindows()
 
+mouseCoords = np.zeros((1000,2))
+count = 0
+def registerCoord(event, x, y, flags, param):
+	global mouseCoords, count
+	if event == cv2.EVENT_LBUTTONDOWN:
+		mouseCoords[count] = np.array([x, y])
+	elif event == cv2.EVENT_RBUTTONDOWN:
+		mouseCoords[count] = np.array([10000, 10000])
+	else:
+		pass
+
+def mouseMotionTracking(clip):
+	global count
+	filename = PANORAMA_ROI[clip]['panorama_final_filename']
+	end_frame = PANORAMA_ROI[clip]['player_red1_tracking_end_frame']
+	start_frame = PANORAMA_ROI[clip]['player_red1_tracking_start_frame']
+	cap = cv2.VideoCapture(filename)
+	count = 0
+	cv2.namedWindow('image')
+	cv2.setMouseCallback('image', registerCoord)
+	while(cap.isOpened() and count < end_frame):
+		ret, frame = cap.read()
+		if count < start_frame:
+			count += 1
+			continue
+		count += 1
+		print("Frame : %d" % count)
+		cv2.imshow("image", frame)
+		key = cv2.waitKey(150) & 0xFF
+		# if the `q` key was pressed, break from the loop
+		if key == ord("q"):
+			break
+	cap.release()
+	cv2.destroyAllWindows()
+
+def fillZeros(arr):
+	first_non_zero = np.array([0,0])
+	prev_non_zero = np.array([0,0])
+	is_set = False
+	for i in range(0, arr.shape[0]):
+		if np.sum(arr[i]) == 0:
+			arr[i] = prev_non_zero
+		else:
+			if not is_set: first_non_zero = arr[i]
+			is_set = True
+			prev_non_zero = arr[i]
+	for i in range(0, arr.shape[0]):
+		if np.sum(arr[i]) == 0:
+			arr[i] = first_non_zero
+	return arr
+
 def main():
+	global mouseCoords
+	clip = PANORAMA_ROI['clip6']
+	# show_frame_in_matplot(clip['panorama_final_filename'], 50, roi=clip['playerRed1'])
+	mouseMotionTracking('clip6')
+	# print(mouseCoords)
+	mouseCoords = fillZeros(mouseCoords)
+	np.savetxt(clip['player_red1_position_filename'], mouseCoords[0:clip['player_red1_tracking_end_frame'],:])
+
+	# playerRed1_roi = generate_ROI(clip['panorama_roi_shape'], clip['playerRed1']['x'], clip['playerRed1']['y'], clip['playerRed1']['w'], clip['playerRed1']['h'])
+	# playerRed1_pts = motion_tracking(clip['panorama_final_filename'], playerRed1_roi, start=clip['player_tracking_start_frame'], end=clip['player_tracking_end_frame'], maxCorners=10)
+	# print(playerRed1_pts.shape)
+
 	# Specify regions of interest for tracking objects
 	# show_frame_in_matplot('./beachVolleyball1_panorama_with_players.mov', 0)
-	# show_frame_in_matplot(CLIP5, 0)
 
 	# ROI_CLIP1_VCOURT_BR = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_BOT_RIGHT['x'], CLIP1_VCOURT_BOT_RIGHT['y'], CLIP1_VCOURT_BOT_RIGHT['w'], CLIP1_VCOURT_BOT_RIGHT['h'])
 	# ROI_CLIP1_VCOURT_NR = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_NET_RIGHT['x'], CLIP1_VCOURT_NET_RIGHT['y'], CLIP1_VCOURT_NET_RIGHT['w'], CLIP1_VCOURT_NET_RIGHT['h'])
@@ -487,7 +553,7 @@ def main():
 	# print(REF_COORDS)
 	# plot_player(REF_COORDS[1:])
 
-	constructPanorama('clip7')
+	# constructPanorama('clip7')
 	# bg = get_bg('clip6', repeat=[(300,400),(500,600)])
 	# addPlayersToBackground(CLIP1_PAN)
 	# mergePanWithBg('clip6')
