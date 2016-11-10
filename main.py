@@ -421,8 +421,9 @@ def mouseMotionTracking(clip, obj):
 	tracking_end_frame_key = 'player_%s_tracking_end_frame' % obj
 	np.savetxt(PANORAMA_ROI[clip][filename_key], mouseCoords[0:int(PANORAMA_ROI[clip][tracking_end_frame_key]),:])
 
-	# Clear mouseCoords
+	# Clear mouseCoords and reset count
 	mouseCoords = np.zeros((1000,2))
+	count = 0
 
 def fillZeros(arr):
 	first_non_zero = np.array([0,0])
