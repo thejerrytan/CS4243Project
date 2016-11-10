@@ -42,7 +42,22 @@ PANORAMA_ROI = {
 			'y' : 150,
 			'h' : 30,
 			'w' : 30
-		}
+		},
+		'player_green1_tracking_end_frame' : 630,
+		'player_green1_tracking_start_frame' : 0,
+		'player_green1_position_filename' : './clip1_player_green1_position.txt',
+		'player_green2_tracking_end_frame' : 630,
+		'player_green2_tracking_start_frame' : 0,
+		'player_green2_position_filename' : './clip1_player_green2_position.txt',
+		'player_white1_tracking_end_frame' : 630,
+		'player_white1_tracking_start_frame' : 0,
+		'player_white1_position_filename' : './clip1_player_white1_position.txt',
+		'player_white2_tracking_end_frame' : 630,
+		'player_white2_tracking_start_frame' : 0,
+		'player_white2_position_filename' : './clip1_player_white2_position.txt',
+		'player_ball_tracking_end_frame' : 630,
+		'player_ball_tracking_start_frame' : 0,
+		'player_ball_position_filename' : './clip1_ball_position.txt'
 	},
 	'clip2' : {
 		'filename'       : './beachVolleyball/beachVolleyball2.mov',
@@ -82,7 +97,22 @@ PANORAMA_ROI = {
 			'y' : 115,
 			'h' : 30,
 			'w' : 30
-		}
+		},
+		'player_green1_tracking_end_frame' : 550,
+		'player_green1_tracking_start_frame' : 0,
+		'player_green1_position_filename' : './clip2_player_green1_position.txt',
+		'player_green2_tracking_end_frame' : 550,
+		'player_green2_tracking_start_frame' : 0,
+		'player_green2_position_filename' : './clip2_player_green2_position.txt',
+		'player_white1_tracking_end_frame' : 550,
+		'player_white1_tracking_start_frame' : 0,
+		'player_white1_position_filename' : './clip2_player_white1_position.txt',
+		'player_white2_tracking_end_frame' : 550,
+		'player_white2_tracking_start_frame' : 0,
+		'player_white2_position_filename' : './clip2_player_white2_position.txt',
+		'player_ball_tracking_end_frame' : 550,
+		'player_ball_tracking_start_frame' : 0,
+		'player_ball_position_filename' : './clip2_ball_position.txt'
 	},
 	'clip3' : {
 		'filename'       : './beachVolleyball/beachVolleyball3.mov',
@@ -122,14 +152,29 @@ PANORAMA_ROI = {
 			'y' : 120,
 			'h' : 30,
 			'w' : 30
-		}
+		},
+		'player_green1_tracking_end_frame' : 350,
+		'player_green1_tracking_start_frame' : 0,
+		'player_green1_position_filename' : './clip3_player_green1_position.txt',
+		'player_green2_tracking_end_frame' : 350,
+		'player_green2_tracking_start_frame' : 0,
+		'player_green2_position_filename' : './clip3_player_green2_position.txt',
+		'player_white1_tracking_end_frame' : 350,
+		'player_white1_tracking_start_frame' : 0,
+		'player_white1_position_filename' : './clip3_player_white1_position.txt',
+		'player_white2_tracking_end_frame' : 350,
+		'player_white2_tracking_start_frame' : 0,
+		'player_white2_position_filename' : './clip3_player_white2_position.txt',
+		'player_ball_tracking_end_frame' : 350,
+		'player_ball_tracking_start_frame' : 0,
+		'player_ball_position_filename' : './clip3_ball_position.txt'
 	},
 	'clip4' : {
 		'filename'       : './beachVolleyball/beachVolleyball4.mov',
 		'panorama_filename' : './beachVolleyball4_panorama.mov',
 		'panorama_bg_filename' : './beachVolleyball4_panorama_bg.jpg',
 		'start_frame'    : 20,
-		'end_frame'      : 600,
+		'end_frame'      : 1000,
 		'original_shape' : (296, 638),
 		'panorama_shape' : (700, 300),
 		'ref_frame'      : 100,
@@ -162,7 +207,22 @@ PANORAMA_ROI = {
 			'y' : 135,
 			'h' : 30,
 			'w' : 30
-		}
+		},
+		'player_green1_tracking_end_frame' : 1000,
+		'player_green1_tracking_start_frame' : 0,
+		'player_green1_position_filename' : './clip4_player_green1_position.txt',
+		'player_green2_tracking_end_frame' : 1000,
+		'player_green2_tracking_start_frame' : 0,
+		'player_green2_position_filename' : './clip4_player_green2_position.txt',
+		'player_white1_tracking_end_frame' : 1000,
+		'player_white1_tracking_start_frame' : 0,
+		'player_white1_position_filename' : './clip4_player_white1_position.txt',
+		'player_white2_tracking_end_frame' : 1000,
+		'player_white2_tracking_start_frame' : 0,
+		'player_white2_position_filename' : './clip4_player_white2_position.txt',
+		'player_ball_tracking_end_frame' : 1000,
+		'player_ball_tracking_start_frame' : 0,
+		'player_ball_position_filename' : './clip4_ball_position.txt'
 	},
 	'clip5' : {
 		'filename'       : './beachVolleyball/beachVolleyball5.mov',
@@ -202,7 +262,22 @@ PANORAMA_ROI = {
 			'y' : 140,
 			'h' : 30,
 			'w' : 30
-		}
+		},
+		'player_red1_tracking_end_frame' : 1000,
+		'player_red1_tracking_start_frame' : 0,
+		'player_red1_position_filename' : './clip5_player_red1_position.txt',
+		'player_red2_tracking_end_frame' : 1000,
+		'player_red2_tracking_start_frame' : 0,
+		'player_red2_position_filename' : './clip5_player_red2_position.txt',
+		'player_white1_tracking_end_frame' : 1000,
+		'player_white1_tracking_start_frame' : 0,
+		'player_white1_position_filename' : './clip5_player_white1_position.txt',
+		'player_white2_tracking_end_frame' : 1000,
+		'player_white2_tracking_start_frame' : 0,
+		'player_white2_position_filename' : './clip5_player_white2_position.txt',
+		'player_ball_tracking_end_frame' : 1000,
+		'player_ball_tracking_start_frame' : 0,
+		'player_ball_position_filename' : './clip5_ball_position.txt'
 	},
 	'clip6' : {
 		'filename'       : './beachVolleyball/beachVolleyball6.mov',
@@ -298,7 +373,22 @@ PANORAMA_ROI = {
 			'y' : 150,
 			'h' : 30,
 			'w' : 30
-		}
+		},
+		'player_red1_tracking_end_frame' : 1000,
+		'player_red1_tracking_start_frame' : 0,
+		'player_red1_position_filename' : './clip7_player_red1_position.txt',
+		'player_red2_tracking_end_frame' : 1000,
+		'player_red2_tracking_start_frame' : 0,
+		'player_red2_position_filename' : './clip7_player_red2_position.txt',
+		'player_white1_tracking_end_frame' : 1000,
+		'player_white1_tracking_start_frame' : 0,
+		'player_white1_position_filename' : './clip7_player_white1_position.txt',
+		'player_white2_tracking_end_frame' : 1000,
+		'player_white2_tracking_start_frame' : 0,
+		'player_white2_position_filename' : './clip7_player_white2_position.txt',
+		'player_ball_tracking_end_frame' : 1000,
+		'player_ball_tracking_start_frame' : 0,
+		'player_ball_position_filename' : './clip7_ball_position.txt'
 	}
 }
 
