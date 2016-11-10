@@ -43,21 +43,28 @@ PANORAMA_ROI = {
 			'h' : 30,
 			'w' : 30
 		},
-		'player_green1_tracking_end_frame' : 630,
+		'player_green1_tracking_end_frame' : 629,
 		'player_green1_tracking_start_frame' : 0,
 		'player_green1_position_filename' : './clip1_player_green1_position.txt',
-		'player_green2_tracking_end_frame' : 630,
+		'player_green2_tracking_end_frame' : 629,
 		'player_green2_tracking_start_frame' : 0,
 		'player_green2_position_filename' : './clip1_player_green2_position.txt',
-		'player_white1_tracking_end_frame' : 630,
+		'player_white1_tracking_end_frame' : 629,
 		'player_white1_tracking_start_frame' : 0,
 		'player_white1_position_filename' : './clip1_player_white1_position.txt',
-		'player_white2_tracking_end_frame' : 630,
+		'player_white2_tracking_end_frame' : 629,
 		'player_white2_tracking_start_frame' : 0,
 		'player_white2_position_filename' : './clip1_player_white2_position.txt',
-		'player_ball_tracking_end_frame' : 630,
+		'player_ball_tracking_end_frame' : 629,
 		'player_ball_tracking_start_frame' : 0,
-		'player_ball_position_filename' : './clip1_ball_position.txt'
+		'player_ball_position_filename' : './clip1_ball_position.txt',
+		'vcourt_bottom_left'  : (-1, -1),
+		'vcourt_bottom_right' : (472, 159),
+		'vcourt_net_left'     : (63, 153),
+		'vcourt_net_right'    : (315, 96),
+		'vcourt_center'       : (224, 115),
+		'vcourt_top_left'     : (-1, -1),
+		'vcourt_top_right'    : (-1, -1)
 	},
 	'clip2' : {
 		'filename'       : './beachVolleyball/beachVolleyball2.mov',
@@ -98,21 +105,28 @@ PANORAMA_ROI = {
 			'h' : 30,
 			'w' : 30
 		},
-		'player_green1_tracking_end_frame' : 550,
+		'player_green1_tracking_end_frame' : 549,
 		'player_green1_tracking_start_frame' : 0,
 		'player_green1_position_filename' : './clip2_player_green1_position.txt',
-		'player_green2_tracking_end_frame' : 550,
+		'player_green2_tracking_end_frame' : 549,
 		'player_green2_tracking_start_frame' : 0,
 		'player_green2_position_filename' : './clip2_player_green2_position.txt',
-		'player_white1_tracking_end_frame' : 550,
+		'player_white1_tracking_end_frame' : 549,
 		'player_white1_tracking_start_frame' : 0,
 		'player_white1_position_filename' : './clip2_player_white1_position.txt',
-		'player_white2_tracking_end_frame' : 550,
+		'player_white2_tracking_end_frame' : 549,
 		'player_white2_tracking_start_frame' : 0,
 		'player_white2_position_filename' : './clip2_player_white2_position.txt',
-		'player_ball_tracking_end_frame' : 550,
+		'player_ball_tracking_end_frame' : 549,
 		'player_ball_tracking_start_frame' : 0,
-		'player_ball_position_filename' : './clip2_ball_position.txt'
+		'player_ball_position_filename' : './clip2_ball_position.txt',
+		'vcourt_bottom_left'  : (-1, -1),
+		'vcourt_bottom_right' : (-1, -1),
+		'vcourt_net_left'     : (176, 153),
+		'vcourt_net_right'    : (607, 176),
+		'vcourt_center'       : (-1, -1),
+		'vcourt_top_left'     : (-1, -1),
+		'vcourt_top_right'    : (545, 135)
 	},
 	'clip3' : {
 		'filename'       : './beachVolleyball/beachVolleyball3.mov',
@@ -153,21 +167,28 @@ PANORAMA_ROI = {
 			'h' : 30,
 			'w' : 30
 		},
-		'player_green1_tracking_end_frame' : 350,
+		'player_green1_tracking_end_frame' : 349,
 		'player_green1_tracking_start_frame' : 0,
 		'player_green1_position_filename' : './clip3_player_green1_position.txt',
-		'player_green2_tracking_end_frame' : 350,
+		'player_green2_tracking_end_frame' : 349,
 		'player_green2_tracking_start_frame' : 0,
 		'player_green2_position_filename' : './clip3_player_green2_position.txt',
-		'player_white1_tracking_end_frame' : 350,
+		'player_white1_tracking_end_frame' : 349,
 		'player_white1_tracking_start_frame' : 0,
 		'player_white1_position_filename' : './clip3_player_white1_position.txt',
-		'player_white2_tracking_end_frame' : 350,
+		'player_white2_tracking_end_frame' : 349,
 		'player_white2_tracking_start_frame' : 0,
 		'player_white2_position_filename' : './clip3_player_white2_position.txt',
-		'player_ball_tracking_end_frame' : 350,
+		'player_ball_tracking_end_frame' : 349,
 		'player_ball_tracking_start_frame' : 0,
-		'player_ball_position_filename' : './clip3_ball_position.txt'
+		'player_ball_position_filename' : './clip3_ball_position.txt',
+		'vcourt_bottom_left'  : (-1, -1),
+		'vcourt_bottom_right' : (-1, -1),
+		'vcourt_net_left'     : (-1, -1),
+		'vcourt_net_right'    : (372, 180),
+		'vcourt_center'       : (-1, -1),
+		'vcourt_top_left'     : (-1, -1),
+		'vcourt_top_right'    : (45, 190)
 	},
 	'clip4' : {
 		'filename'       : './beachVolleyball/beachVolleyball4.mov',
@@ -208,21 +229,28 @@ PANORAMA_ROI = {
 			'h' : 30,
 			'w' : 30
 		},
-		'player_green1_tracking_end_frame' : 1000,
+		'player_green1_tracking_end_frame' : 999,
 		'player_green1_tracking_start_frame' : 0,
 		'player_green1_position_filename' : './clip4_player_green1_position.txt',
-		'player_green2_tracking_end_frame' : 1000,
+		'player_green2_tracking_end_frame' : 999,
 		'player_green2_tracking_start_frame' : 0,
 		'player_green2_position_filename' : './clip4_player_green2_position.txt',
-		'player_white1_tracking_end_frame' : 1000,
+		'player_white1_tracking_end_frame' : 999,
 		'player_white1_tracking_start_frame' : 0,
 		'player_white1_position_filename' : './clip4_player_white1_position.txt',
-		'player_white2_tracking_end_frame' : 1000,
+		'player_white2_tracking_end_frame' : 999,
 		'player_white2_tracking_start_frame' : 0,
 		'player_white2_position_filename' : './clip4_player_white2_position.txt',
-		'player_ball_tracking_end_frame' : 1000,
+		'player_ball_tracking_end_frame' : 999,
 		'player_ball_tracking_start_frame' : 0,
-		'player_ball_position_filename' : './clip4_ball_position.txt'
+		'player_ball_position_filename' : './clip4_ball_position.txt',
+		'vcourt_bottom_left'  : (-1, -1),
+		'vcourt_bottom_right' : (-1, -1),
+		'vcourt_net_left'     : (-1, -1),
+		'vcourt_net_right'    : (-1, -1),
+		'vcourt_center'       : (-1, -1),
+		'vcourt_top_left'     : (-1, -1),
+		'vcourt_top_right'    : (-1, -1)
 	},
 	'clip5' : {
 		'filename'       : './beachVolleyball/beachVolleyball5.mov',
@@ -263,21 +291,28 @@ PANORAMA_ROI = {
 			'h' : 30,
 			'w' : 30
 		},
-		'player_red1_tracking_end_frame' : 1000,
+		'player_red1_tracking_end_frame' : 999,
 		'player_red1_tracking_start_frame' : 0,
 		'player_red1_position_filename' : './clip5_player_red1_position.txt',
-		'player_red2_tracking_end_frame' : 1000,
+		'player_red2_tracking_end_frame' : 999,
 		'player_red2_tracking_start_frame' : 0,
 		'player_red2_position_filename' : './clip5_player_red2_position.txt',
-		'player_white1_tracking_end_frame' : 1000,
+		'player_white1_tracking_end_frame' : 999,
 		'player_white1_tracking_start_frame' : 0,
 		'player_white1_position_filename' : './clip5_player_white1_position.txt',
-		'player_white2_tracking_end_frame' : 1000,
+		'player_white2_tracking_end_frame' : 999,
 		'player_white2_tracking_start_frame' : 0,
 		'player_white2_position_filename' : './clip5_player_white2_position.txt',
-		'player_ball_tracking_end_frame' : 1000,
+		'player_ball_tracking_end_frame' : 999,
 		'player_ball_tracking_start_frame' : 0,
-		'player_ball_position_filename' : './clip5_ball_position.txt'
+		'player_ball_position_filename' : './clip5_ball_position.txt',
+		'vcourt_bottom_left'  : (-1, -1),
+		'vcourt_bottom_right' : (671, 326),
+		'vcourt_net_left'     : (80, 197),
+		'vcourt_net_right'    : (421, 185),
+		'vcourt_center'       : (253, 192),
+		'vcourt_top_left'     : (-1, -1),
+		'vcourt_top_right'    : (-1, -1)
 	},
 	'clip6' : {
 		'filename'       : './beachVolleyball/beachVolleyball6.mov',
@@ -333,7 +368,14 @@ PANORAMA_ROI = {
 		'player_white2_position_filename' : './clip6_player_white2_position.txt',
 		'player_ball_tracking_end_frame' : 378,
 		'player_ball_tracking_start_frame' : 0,
-		'player_ball_position_filename' : './clip6_ball_position.txt'
+		'player_ball_position_filename' : './clip6_ball_position.txt',
+		'vcourt_bottom_left'  : (-1, -1),
+		'vcourt_bottom_right' : (688, 238),
+		'vcourt_net_left'     : (-1, -1),
+		'vcourt_net_right'    : (341, 221),
+		'vcourt_center'       : (341, 308),
+		'vcourt_top_left'     : (-1, -1),
+		'vcourt_top_right'    : (-1, -1)
 	},
 	'clip7' : {
 		'filename'          : './beachVolleyball/beachVolleyball7.mov',
@@ -374,78 +416,29 @@ PANORAMA_ROI = {
 			'h' : 30,
 			'w' : 30
 		},
-		'player_red1_tracking_end_frame' : 1000,
+		'player_red1_tracking_end_frame' : 999,
 		'player_red1_tracking_start_frame' : 0,
 		'player_red1_position_filename' : './clip7_player_red1_position.txt',
-		'player_red2_tracking_end_frame' : 1000,
+		'player_red2_tracking_end_frame' : 999,
 		'player_red2_tracking_start_frame' : 0,
 		'player_red2_position_filename' : './clip7_player_red2_position.txt',
-		'player_white1_tracking_end_frame' : 1000,
+		'player_white1_tracking_end_frame' : 999,
 		'player_white1_tracking_start_frame' : 0,
 		'player_white1_position_filename' : './clip7_player_white1_position.txt',
-		'player_white2_tracking_end_frame' : 1000,
+		'player_white2_tracking_end_frame' : 999,
 		'player_white2_tracking_start_frame' : 0,
 		'player_white2_position_filename' : './clip7_player_white2_position.txt',
-		'player_ball_tracking_end_frame' : 1000,
+		'player_ball_tracking_end_frame' : 999,
 		'player_ball_tracking_start_frame' : 0,
-		'player_ball_position_filename' : './clip7_ball_position.txt'
+		'player_ball_position_filename' : './clip7_ball_position.txt',
+		'vcourt_bottom_left'  : (-1, -1),
+		'vcourt_bottom_right' : (612, 220),
+		'vcourt_net_left'     : (-1, -1),
+		'vcourt_net_right'    : (259, 208),
+		'vcourt_center'       : (259, 278),
+		'vcourt_top_left'     : (-1, -1),
+		'vcourt_top_right'    : (-1, -1)
 	}
-}
-
-CLIP1_GREEN_P1_ROI = {
-	'x' : 330,
-	'y' : 180,
-	'h' : 50,
-	'w' : 50
-}
-# CLIP1_GREEN_P1_ROI = {
-# 	'x' : 470,
-# 	'y' : 210,
-# 	'h' : 30,
-# 	'w' : 30
-# }
-CLIP1_GREEN_P2_ROI = {
-	'x' : 190,
-	'y' : 100,
-	'h' : 50,
-	'w' : 50
-}
-
-CLIP1_VCOURT_BOT_RIGHT = {
-	'x' : 430,
-	'y' : 130,
-	'h' : 50,
-	'w' : 50
-}
-CLIP1_VCOURT_BOT_LEFT = {
-	'x' : 170,
-	'y' : 275,
-	'h' : 50,
-	'w' : 50
-}
-CLIP1_VCOURT_NET_RIGHT = {
-	'x' : 255,
-	'y' : 70,
-	'h' : 50,
-	'w' : 50
-}
-CLIP1_VCOURT_NET_LEFT = {
-	'x' : 35,
-	'y' : 130,
-	'h' : 50,
-	'w' : 50
-}
-CLIP1_VCOURT_RIGHT_MID = {
-	'x' : 280,
-	'y' : 85,
-	'h' : 10,
-	'w' : 10
-}
-CLIP1_VCOURT_LEFT_MID = {
-	'x' : 70,
-	'y' : 130,
-	'h' : 15,
-	'w' : 15
 }
 
 def motion_tracking(filename, ROI, start=0, end=None, maxCorners=3, skip=None):
