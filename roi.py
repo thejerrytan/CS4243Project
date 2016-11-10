@@ -368,7 +368,7 @@ def motion_tracking(filename, ROI, start=0, end=None, maxCorners=3, skip=None):
 	
 	# Take first frame and find corners in it
 	ret, old_frame = cap.read()
-	print(old_frame.shape)
+	
 	old_gray = cv2.cvtColor(old_frame, cv2.COLOR_BGR2GRAY)
 	p0 = cv2.goodFeaturesToTrack(old_gray, mask = ROI, **feature_params)
 	
