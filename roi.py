@@ -208,6 +208,7 @@ PANORAMA_ROI = {
 		'filename'       : './beachVolleyball/beachVolleyball6.mov',
 		'panorama_filename' : './beachVolleyball6_panorama.mov',
 		'panorama_bg_filename' : './beachVolleyball6_panorama_bg.jpg',
+		'panorama_final_filename' : './beachVolleyball6_panorama_final.mov',
 		'start_frame'    : 0,
 		'end_frame'      : 380,
 		'original_shape' : (350, 636),
@@ -242,7 +243,22 @@ PANORAMA_ROI = {
 			'y' : 270,
 			'h' : 20,
 			'w' : 20
-		}
+		},
+		'player_red1_tracking_end_frame' : 378,
+		'player_red1_tracking_start_frame' : 0,
+		'player_red1_position_filename' : './clip6_player_red1_position.txt',
+		'player_red2_tracking_end_frame' : 378,
+		'player_red2_tracking_start_frame' : 0,
+		'player_red2_position_filename' : './clip6_player_red2_position.txt',
+		'player_white1_tracking_end_frame' : 378,
+		'player_white1_tracking_start_frame' : 0,
+		'player_white1_position_filename' : './clip6_player_white1_position.txt',
+		'player_white2_tracking_end_frame' : 378,
+		'player_white2_tracking_start_frame' : 0,
+		'player_white2_position_filename' : './clip6_player_white2_position.txt',
+		'player_ball_tracking_end_frame' : 378,
+		'player_ball_tracking_start_frame' : 0,
+		'player_ball_position_filename' : './clip6_ball_position.txt'
 	},
 	'clip7' : {
 		'filename'          : './beachVolleyball/beachVolleyball7.mov',

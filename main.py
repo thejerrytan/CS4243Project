@@ -387,11 +387,14 @@ def registerCoord(event, x, y, flags, param):
 	else:
 		pass
 
-def mouseMotionTracking(clip):
-	global count
+def mouseMotionTracking(clip, obj):
+	""" clip is one of [clip1 - clip7]
+		obj is one of [red1, red2, white1, white2, ball, green1, green2] - string
+	"""
+	global count, mouseCoords
 	filename = PANORAMA_ROI[clip]['panorama_final_filename']
-	end_frame = PANORAMA_ROI[clip]['player_red1_tracking_end_frame']
-	start_frame = PANORAMA_ROI[clip]['player_red1_tracking_start_frame']
+	end_frame = PANORAMA_ROI[clip]['player_%s_tracking_end_frame' % obj]
+	start_frame = PANORAMA_ROI[clip]['player_%s_tracking_start_frame' % obj]
 	cap = cv2.VideoCapture(filename)
 	count = 0
 	cv2.namedWindow('image')
@@ -403,13 +406,23 @@ def mouseMotionTracking(clip):
 			continue
 		count += 1
 		print("Frame : %d" % count)
-		cv2.imshow("image", frame)
-		key = cv2.waitKey(150) & 0xFF
+		if count % 10 == 0:
+			cv2.imshow("image", frame)
+		key = cv2.waitKey(50) & 0xFF
 		# if the `q` key was pressed, break from the loop
 		if key == ord("q"):
 			break
 	cap.release()
 	cv2.destroyAllWindows()
+
+	# Post processing
+	mouseCoords = fillZeros(mouseCoords)
+	filename_key = 'player_%s_position_filename' % obj
+	tracking_end_frame_key = 'player_%s_tracking_end_frame' % obj
+	np.savetxt(PANORAMA_ROI[clip][filename_key], mouseCoords[0:int(PANORAMA_ROI[clip][tracking_end_frame_key]),:])
+
+	# Clear mouseCoords
+	mouseCoords = np.zeros((1000,2))
 
 def fillZeros(arr):
 	first_non_zero = np.array([0,0])
@@ -429,13 +442,23 @@ def fillZeros(arr):
 
 def main():
 	global mouseCoords
-	clip = PANORAMA_ROI['clip6']
 	# show_frame_in_matplot(clip['panorama_final_filename'], 50, roi=clip['playerRed1'])
-	mouseMotionTracking('clip6')
-	# print(mouseCoords)
-	mouseCoords = fillZeros(mouseCoords)
-	np.savetxt(clip['player_red1_position_filename'], mouseCoords[0:clip['player_red1_tracking_end_frame'],:])
-
+	print("Get ready to track red1")
+	time.sleep(2)
+	mouseMotionTracking('clip6', 'red1')
+	print("Get ready to track red2")
+	time.sleep(2)
+	mouseMotionTracking('clip6', 'red2')
+	print("Get ready to track white1")
+	time.sleep(2)
+	mouseMotionTracking('clip6', 'white1')
+	print("Get ready to track white2")
+	time.sleep(2)
+	mouseMotionTracking('clip6', 'white2')
+	print("Get ready to track ball")
+	time.sleep(2)
+	mouseMotionTracking('clip6', 'ball')
+	
 	# playerRed1_roi = generate_ROI(clip['panorama_roi_shape'], clip['playerRed1']['x'], clip['playerRed1']['y'], clip['playerRed1']['w'], clip['playerRed1']['h'])
 	# playerRed1_pts = motion_tracking(clip['panorama_final_filename'], playerRed1_roi, start=clip['player_tracking_start_frame'], end=clip['player_tracking_end_frame'], maxCorners=10)
 	# print(playerRed1_pts.shape)
