@@ -3,16 +3,23 @@ from __future__ import division
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 
 WINDOW_SIZE = 10
 
 
 def plot_topdown(clip):
     cap = cv2.VideoCapture("./beachVolleyball/beachVolleyball%d.mov" % clip)
-    player1 = np.loadtxt('./clip%d_player_green1_position.txt' % (clip))
-    player2 = np.loadtxt('./clip%d_player_green2_position.txt' % (clip))
-    player3 = np.loadtxt('./clip%d_player_white1_position.txt' % (clip))
-    player4 = np.loadtxt('./clip%d_player_white2_position.txt' % (clip))
+
+    color1 = "green"
+    color2 = "white"
+    if clip >= 5:
+        color1 = "red"
+
+    player1 = np.loadtxt('./clip%d_player_%s1_position.txt' % (clip, color1))
+    player2 = np.loadtxt('./clip%d_player_%s2_position.txt' % (clip, color1))
+    player3 = np.loadtxt('./clip%d_player_%s1_position.txt' % (clip, color2))
+    player4 = np.loadtxt('./clip%d_player_%s2_position.txt' % (clip, color2))
     ball = np.loadtxt('./clip%d_ball_position.txt' % (clip))
     interpolate_ball(ball)
 
@@ -28,10 +35,32 @@ def plot_topdown(clip):
     _, jump3 = smooth_position_and_count_jump(player3)
     _, jump4 = smooth_position_and_count_jump(player4)
 
-    print "Jump Count 1: ", jump1
-    print "Jump Count 2: ", jump2
-    print "Jump Count 3: ", jump3
-    print "Jump Count 4: ", jump4
+    distance_1 = calculate_total_distance(player1)
+    distance_2 = calculate_total_distance(player2)
+    distance_3 = calculate_total_distance(player3)
+    distance_4 = calculate_total_distance(player4)
+
+    print "Jump 1: ", jump1, "Distance 1: ", distance_1
+    print "Jump 2: ", jump2, "Distance 2: ", distance_2
+    print "Jump 3: ", jump3, "Distance 3: ", distance_3
+    print "Jump 4: ", jump4, "Distance 4: ", distance_4
+
+    with open("./clip%d_stats.txt" % clip, "w") as f:
+        f.write('Player %s 1\n' % color1)
+        f.write('\tJumps: %d\n' % jump1)
+        f.write('\tDistance: %d\n' % distance_1)
+
+        f.write('Player %s 2\n' % color1)
+        f.write('\tJumps: %d\n' % jump2)
+        f.write('\tDistance: %d\n' % distance_2)
+
+        f.write('Player %s 1\n' % color2)
+        f.write('\tJumps: %d\n' % jump3)
+        f.write('\tDistance: %d\n' % distance_3)
+
+        f.write('Player %s 2\n' % color2)
+        f.write('\tJumps: %d\n' % jump3)
+        f.write('\tDistance: %d\n' % distance_3)
 
     plt.figure()
     plt.ion()
@@ -48,10 +77,10 @@ def plot_topdown(clip):
         plt.plot((800, 800), (-400, 400), "k-")
         plt.plot((-800, -800), (-400, 400), "k-")
         plt.plot((0, 0), (500, -500), "k-")
-        plt.scatter(player1[i, 1], player1[i, 0], edgecolor='green', facecolor='green', s=9 ** 2, marker='o')
-        plt.scatter(player2[i, 1], player2[i, 0], edgecolor='green', facecolor='green', s=9 ** 2, marker='o')
-        plt.scatter(player3[i, 1], player3[i, 0], edgecolor='red', facecolor='red', s=9 ** 2, marker='o')
-        plt.scatter(player4[i, 1], player4[i, 0], edgecolor='red', facecolor='red', s=9 ** 2, marker='o')
+        plt.scatter(player1[i, 1], player1[i, 0], edgecolor=color1, facecolor=color1, s=9 ** 2, marker='o')
+        plt.scatter(player2[i, 1], player2[i, 0], edgecolor=color1, facecolor=color1, s=9 ** 2, marker='o')
+        plt.scatter(player3[i, 1], player3[i, 0], edgecolor='yellow', facecolor='yellow', s=9 ** 2, marker='o')
+        plt.scatter(player4[i, 1], player4[i, 0], edgecolor='yellow', facecolor='yellow', s=9 ** 2, marker='o')
         plt.scatter(ball[i, 1], ball[i, 0], edgecolor='blue', facecolor='blue', s=9 ** 2, marker='o')
 
         plt.show()
@@ -85,6 +114,20 @@ def interpolate_ball(arr):
 
 def sqdistance(x1, y1, x2, y2):
     return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)
+
+
+def distance(x1, y1, x2, y2):
+    return math.sqrt(sqdistance(x1, y1, x2, y2))
+
+
+def calculate_total_distance(arr):
+    total = 0
+    for i in range(1, len(arr)):
+        pt1 = arr[i - 1]
+        pt2 = arr[i]
+        total += distance(pt2[1], pt2[0], pt1[1], pt1[0])
+
+    return total
 
 
 def smooth_position_and_count_jump(arr):
