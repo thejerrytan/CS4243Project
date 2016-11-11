@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division # All division is floating point
 import numpy as np
 import math
 import numpy.linalg as la
@@ -10,7 +10,15 @@ from roi import *
 import time
 np.seterr(divide='ignore', invalid='ignore')
 np.set_printoptions(threshold=np.inf)
-cv2.ocl.setUseOpenCL(False)
+
+version_flag = 2
+if is_cv2():
+	version_flag = 2
+	import cv2.cv as cv
+elif is_cv3():
+	version_flag = 3
+
+# cv2.ocl.setUseOpenCL(False)
 
 # Acknowledgements - The team would like to acknowledge the following resources referenced in our project
 # Processing video frames and writing to video file: http://www.pyimagesearch.com/2016/02/22/writing-to-video-with-opencv/
@@ -20,28 +28,6 @@ cv2.ocl.setUseOpenCL(False)
 # The volleyball court floor is used as the plane for homography calculation purposes
 # Hence, because of our choice of coordinates, the world coordinates coincide with our plane coordinates
 # with (Wx, Wy, Wz) = (Vp, Up, Zp)
-CLIP1 = './beachVolleyball/beachVolleyball1.mov'
-CLIP2 = './beachVolleyball/beachVolleyball2.mov'
-CLIP3 = './beachVolleyball/beachVolleyball3.mov'
-CLIP4 = './beachVolleyball/beachVolleyball4.mov'
-CLIP5 = './beachVolleyball/beachVolleyball5.mov'
-CLIP6 = './beachVolleyball/beachVolleyball6.mov'
-CLIP7 = './beachVolleyball/beachVolleyball7.mov'
-
-# Panoram videos
-CLIP1_PAN = './beachVolleyball1_panorama.avi'
-
-# Backgrounds
-CLIP1_PAN_BG = './beachVolleyball1_panorama_bg.jpg'
-
-# Video Dimensions - 300 x 632
-CLIP1_SHAPE = (300, 632)
-CLIP2_SHAPE = (300, 632)
-CLIP3_SHAPE = (300, 632)
-CLIP4_SHAPE = (300, 632)
-CLIP5_SHAPE = (300, 632)
-CLIP6_SHAPE = (300, 632)
-CLIP7_SHAPE = (300, 632)
 
 # Using 1 cm = 1 unit as our scale, we can write down the coordinates of 5 key points on the plane
 # For purposes of feature extraction, we need to identify points that are good corners and appear consistently
@@ -59,11 +45,12 @@ VCOURT_RIGHT_MID = np.array([400,0])
 VCOURT_BOT_MID   = np.array([0,800])
 VCOURT_TOP_MID   = np.array([0,-800])
 
-def get_bg(filename, repeat=None):
+def get_bg(clip, repeat=None):
 	""" 
 		Get background of image by averaging method. Only works for stationary camera and background
 		Repeat = list of tuples e.g. [(start, stop), (start,stop)] where we will add all the frames from start to stop again
 	"""
+	filename = PANORAMA_ROI[clip]['panorama_filename']
 	cap = cv2.VideoCapture(filename)
 	fw  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 	fh  = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -76,6 +63,10 @@ def get_bg(filename, repeat=None):
 		curr_repeat = repeat.pop(0)
 		curr_start = curr_repeat[0]
 		curr_end   = curr_repeat[1]
+	else:
+		curr_repeat = None
+		curr_start  = None
+		curr_end    = None
 	while(cap.isOpened() and ret):
 		alpha = 1.0 / count
 		if curr_start is not None and count >= curr_start and curr_end is not None and curr_end > count:
@@ -86,7 +77,7 @@ def get_bg(filename, repeat=None):
 		print("Frame = " + str(count) + ", alpha = " + str(alpha))
 		cv2.imshow('background', avgImg)
 		cv2.waitKey(1)
-		normImg = cv2.convertScaleAbs(avgImg)
+		normImg = cv2.convertScaleAbs(2.5 * avgImg)
 		cv2.waitKey(1)
 		cv2.imshow('normalized background', normImg)
 		ret, frame = cap.read()
@@ -105,13 +96,17 @@ def get_bg(filename, repeat=None):
 	cv2.destroyAllWindows()
 	return normImg
 
-def show_frame_in_matplot(filename, num):
+def show_frame_in_matplot(filename, num, roi=None):
 	""" Show frame number from filename in matplot"""
 	cap = cv2.VideoCapture(filename)
 	count = 0
 	while(cap.isOpened() and count <= num):
 		count += 1
 		ret, frame = cap.read()
+	if roi is not None:
+		top_left = (roi['x'], roi['y'])
+		bottom_right = (roi['x']+roi['w'], roi['y']+roi['h'])
+		frame = cv2.rectangle(frame, top_left, bottom_right, (0,0,255), 3)	
 	plt.figure()
 	plt.imshow(frame)
 	plt.show()
@@ -171,17 +166,23 @@ def constructPanorama(clip):
 	pt4_roi = generate_ROI(original_shape, pt4['x'], pt4['y'], pt4['w'], pt4['h'])
 	pt5_roi = generate_ROI(original_shape, pt5['x'], pt5['y'], pt5['w'], pt5['h'])
 
-	vcourt_pt1 = motion_tracking(filename, pt1_roi, start=start_frame, end=end_frame, maxCorners=1)
-	vcourt_pt2 = motion_tracking(filename, pt2_roi, start=start_frame, end=end_frame, maxCorners=1)
-	vcourt_pt3 = motion_tracking(filename, pt3_roi, start=start_frame, end=end_frame, maxCorners=1)
-	vcourt_pt4 = motion_tracking(filename, pt4_roi, start=start_frame, end=end_frame, maxCorners=1)
-	vcourt_pt5 = motion_tracking(filename, pt5_roi, start=start_frame, end=end_frame, maxCorners=1)
+###################################################################################################
+# Run Once to get txt for player position and track points, load the txt file for subsequent  
+###################################################################################################
 
-	np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 1), vcourt_pt1)
-	np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 2), vcourt_pt2)
-	np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 3), vcourt_pt3)
-	np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 4), vcourt_pt4)
-	np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 5), vcourt_pt5)
+	# vcourt_pt1 = motion_tracking(filename, pt1_roi, start=start_frame, end=end_frame, maxCorners=1)
+	# vcourt_pt2 = motion_tracking(filename, pt2_roi, start=start_frame, end=end_frame, maxCorners=1)
+	# vcourt_pt3 = motion_tracking(filename, pt3_roi, start=start_frame, end=end_frame, maxCorners=1)
+	# vcourt_pt4 = motion_tracking(filename, pt4_roi, start=start_frame, end=end_frame, maxCorners=1)
+	# vcourt_pt5 = motion_tracking(filename, pt5_roi, start=start_frame, end=end_frame, maxCorners=1)
+
+	# np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 1), vcourt_pt1)
+	# np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 2), vcourt_pt2)
+	# np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 3), vcourt_pt3)
+	# np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 4), vcourt_pt4)
+	# np.savetxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 5), vcourt_pt5)
+
+###################################################################################################
 
 	# Load u,v coordinates of 5 points on the plane
 	vcourt_pt1 = np.loadtxt('./clip%d_vcourt_pt%d.txt' % (clip_num, 1,))
@@ -222,9 +223,13 @@ def constructPanorama(clip):
 	try:
 		# Initialize video writer and codecs
 		cap = cv2.VideoCapture(filename)
-		fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-		writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.avi", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
-		while(cap.isOpened() and count < end_frame):
+		if version_flag == 3:
+			fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+			writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
+		elif version_flag == 2:
+			fourcc = cv.CV_FOURCC('m','p','4','v')
+			writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 24, (PAN_WIDTH, PAN_HEIGHT), True)
+		while(cap.isOpened() and count < end_frame-1):
 			ret, frame = cap.read()
 			if count < start_frame:
 				count +=1
@@ -247,10 +252,55 @@ def constructPanorama(clip):
 	except Exception as e:
 		print e
 	finally:
-		# cv2.imwrite('clip%d_bg.jpg' % (clip_num,), normImg)
 		cap.release()
 		writer.release()
 		cv2.destroyAllWindows()
+
+def mergePanWithBg(clip):
+	"""
+		Merge panorama intermediate video with averaged background
+	"""
+	pan_shape      = PANORAMA_ROI[clip]['panorama_shape']
+	start_frame    = PANORAMA_ROI[clip]['start_frame']
+	end_frame      = PANORAMA_ROI[clip]['end_frame']
+
+	PAN_WIDTH  = pan_shape[0]
+	PAN_HEIGHT = pan_shape[1]
+	count = 0
+	bg = cv2.imread(PANORAMA_ROI[clip]['panorama_bg_filename'], cv2.IMREAD_COLOR)
+	videoFile = PANORAMA_ROI[clip]['panorama_filename']
+	cap = cv2.VideoCapture(videoFile)
+	if version_flag == 3:
+		fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+		writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
+	elif version_flag == 2:
+		fourcc = cv.CV_FOURCC('m','p','4','v')
+		writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 24, (PAN_WIDTH, PAN_HEIGHT), True)
+	tol = 50
+	while(cap.isOpened() and count < end_frame):
+		ret, frame = cap.read()
+		if count < start_frame:
+			count += 1
+			continue
+		count += 1
+		print("Frame : %d" % count)
+		fgmask = np.zeros((frame.shape[0],frame.shape[1]), dtype='uint8')
+		fgmask[np.where(np.sum(frame, axis=2) >= tol)] = 255
+		bgmask = np.zeros((frame.shape[0],frame.shape[1]), dtype='uint8')
+		bgmask[np.where(np.sum(frame, axis=2) < tol)] = 255
+		foreground = cv2.bitwise_and(frame, frame, mask=fgmask)
+		background = cv2.bitwise_and(bg, bg, mask=bgmask)
+		combined = cv2.add(foreground, background)
+		combined = cv2.convertScaleAbs(combined)
+		cv2.imshow("Merged", combined)
+		writer.write(combined)
+		key = cv2.waitKey(1) & 0xFF
+		# if the `q` key was pressed, break from the loop
+		if key == ord("q"):
+			break
+	cap.release()
+	writer.release()
+	cv2.destroyAllWindows()
 
 def colorBackground(img, color):
 	""" color black background with a single constant RBG color given by color = (B, G, R)"""
@@ -276,37 +326,6 @@ def colorBackground(img, color):
 		for v in range(start_bot, height):
 			if np.sum(img[v,u,:]) < tol:
 				img[v,u,:] = np.array([color[0],color[1],color[2]], dtype='uint8')
-	return img
-
-def extendBorder(img, up=False, down=False, left=False, right=False):
-	""" Fill zeros with last border"""
-	(height, width, channel) = img.shape
-	# Start from center, traverse column wise
-	center_u = int(width/2)
-	center_v = int(height/2)
-	for u in range(0, width):
-		last_top_border = np.array([0,0,0], dtype='uint8')
-		last_bot_border = np.array([0,0,0], dtype='uint8')
-		top_v = center_v
-		bot_v = center_v
-		for v in range(0, int(math.floor(-height/2)), -1):
-			if np.sum(img[center_v + v, u, :]) == 0:
-				top_v = v
-				break
-			else:
-				last_top_border = img[center_v + v, u, :]
-		if top_v != center_v:
-			for v in range(top_v, int(math.floor(-height/2)), -1):
-				img[center_v + v, u, :] = last_top_border
-		for v in range(0, int(math.floor(height/2))):
-			if np.sum(img[center_v + v, u, :]) == 0:
-				bot_v = v
-				break
-			else:
-				last_bot_border = img[center_v + v, u, :]
-		if bot_v != center_v:
-			for v in range(bot_v, int(math.floor(height/2))):
-				img[center_v + v, u, :] = last_bot_border
 	return img
 
 def subtractBackground(filename):
@@ -335,8 +354,8 @@ def addPlayersToBackground(filename):
 	
 	# Initialize resources
 	fgbg = cv2.createBackgroundSubtractorMOG2(varThreshold=50, detectShadows=False)
-	fourcc = cv2.VideoWriter_fourcc(*"MJPG")
-	writer = cv2.VideoWriter(filename.split('/')[1].split('.')[0] + "_with_players.avi", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
+	fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+	writer = cv2.VideoWriter(filename.split('/')[1].split('.')[0] + "_with_players.mov", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
 	ROI_mask = np.zeros((PAN_HEIGHT, PAN_WIDTH), dtype='uint8')
 	ROI_mask[50:155, 70:480] = 255
 	ROI_mask[100:250, 250:470] = 255
@@ -357,10 +376,116 @@ def addPlayersToBackground(filename):
 	writer.release()
 	cv2.destroyAllWindows()
 
+mouseCoords = np.zeros((1000,2))
+count = 0
+def registerCoord(event, x, y, flags, param):
+	global mouseCoords, count
+	if event == cv2.EVENT_LBUTTONDOWN:
+		mouseCoords[count] = np.array([x, y])
+	elif event == cv2.EVENT_RBUTTONDOWN:
+		mouseCoords[count] = np.array([10000, 10000])
+	else:
+		pass
+
+def mouseMotionTracking(clip, obj, use_final=True):
+	""" 
+		Use this to track manually using mouse. Left click on player's feet. If player is out of view temporarily, right click
+		clip is one of [clip1 - clip7]
+		obj is one of [red1, red2, white1, white2, ball, green1, green2] - string
+		use_final - default True, use the final panorama clip, else use the original panorama clip without background
+
+		Here we follow this convention:
+		red1   - means red team player who stands at the back of the court
+		red2   - means red team player who stands at the front of the court
+		green1 - means green team player who stands at the back of the court
+		green2 - means green team player who stands at the front of the court
+		white1 - means white team player who stands at the back of the court
+		white2 - means white team player who stands at the front of the court
+		ball   - the volleyball we are tracking
+	"""
+	global count, mouseCoords
+	if use_final:
+		filename = PANORAMA_ROI[clip]['panorama_final_filename']
+	else:
+		filename = PANORAMA_ROI[clip]['panorama_filename']
+	end_frame = PANORAMA_ROI[clip]['player_%s_tracking_end_frame' % obj]
+	start_frame = PANORAMA_ROI[clip]['player_%s_tracking_start_frame' % obj]
+	cap = cv2.VideoCapture(filename)
+	count = 0
+	cv2.namedWindow('image')
+	cv2.setMouseCallback('image', registerCoord)
+	while(cap.isOpened() and count < end_frame):
+		ret, frame = cap.read()
+		if count < start_frame:
+			count += 1
+			continue
+		count += 1
+		print("Frame : %d" % count)
+		if obj != 'ball':
+			if count % 10 == 0:
+				cv2.imshow("image", frame)
+		else:
+			cv2.imshow("image", frame)
+		key = cv2.waitKey(50) & 0xFF
+		# if the `q` key was pressed, break from the loop
+		if key == ord("q"):
+			break
+	cap.release()
+	cv2.destroyAllWindows()
+
+	# Post processing
+	mouseCoords = fillZeros(mouseCoords)
+	filename_key = 'player_%s_position_filename' % obj
+	tracking_end_frame_key = 'player_%s_tracking_end_frame' % obj
+	np.savetxt(PANORAMA_ROI[clip][filename_key], mouseCoords[0:int(PANORAMA_ROI[clip][tracking_end_frame_key]),:])
+
+	# Clear mouseCoords and reset count
+	mouseCoords = np.zeros((1000,2))
+	count = 0
+
+def fillZeros(arr):
+	first_non_zero = np.array([0,0])
+	prev_non_zero = np.array([0,0])
+	is_set = False
+	for i in range(0, arr.shape[0]):
+		if np.sum(arr[i]) == 0:
+			arr[i] = prev_non_zero
+		else:
+			if not is_set: first_non_zero = arr[i]
+			is_set = True
+			prev_non_zero = arr[i]
+	for i in range(0, arr.shape[0]):
+		if np.sum(arr[i]) == 0:
+			arr[i] = first_non_zero
+	return arr
+
 def main():
+	global mouseCoords
+	clip = PANORAMA_ROI['clip1']
+	show_frame_in_matplot(clip['panorama_filename'], 100)
+	# print("Get ready to track green1")
+	# time.sleep(2)
+	# mouseMotionTracking('clip7', 'red1', use_final=False)
+	# print("Get ready to track green2")
+	# time.sleep(2)
+	# mouseMotionTracking('clip7', 'red2', use_final=False)
+	# print("Get ready to track white1")
+	# time.sleep(2)
+	# mouseMotionTracking('clip7', 'white1', use_final=False)
+	# print("Get ready to track white2")
+	# time.sleep(2)
+	# mouseMotionTracking('clip7', 'white2', use_final=False)
+	# print("Get ready to track ball")
+	# time.sleep(2)
+	# mouseMotionTracking('clip7', 'ball', use_final=False)
+	
+	# playerRed1_roi = generate_ROI(clip['panorama_roi_shape'], clip['playerRed1']['x'], clip['playerRed1']['y'], clip['playerRed1']['w'], clip['playerRed1']['h'])
+	# playerRed1_pts = motion_tracking(clip['panorama_final_filename'], playerRed1_roi, start=clip['player_tracking_start_frame'], end=clip['player_tracking_end_frame'], maxCorners=10)
+	# print(playerRed1_pts.shape)
+
 	# Specify regions of interest for tracking objects
-	# show_frame_in_matplot('./beachVolleyball1_panorama_with_players.avi', 0)
-	# show_frame_in_matplot(CLIP5, 0)
+	# show_frame_in_matplot('./beachVolleyball1_panorama_with_players.mov', 0)
+
 	# ROI_CLIP1_VCOURT_BR = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_BOT_RIGHT['x'], CLIP1_VCOURT_BOT_RIGHT['y'], CLIP1_VCOURT_BOT_RIGHT['w'], CLIP1_VCOURT_BOT_RIGHT['h'])
 	# ROI_CLIP1_VCOURT_NR = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_NET_RIGHT['x'], CLIP1_VCOURT_NET_RIGHT['y'], CLIP1_VCOURT_NET_RIGHT['w'], CLIP1_VCOURT_NET_RIGHT['h'])
 	# ROI_CLIP1_VCOURT_NL = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_NET_LEFT['x'], CLIP1_VCOURT_NET_LEFT['y'], CLIP1_VCOURT_NET_LEFT['w'], CLIP1_VCOURT_NET_LEFT['h'])
@@ -471,9 +596,10 @@ def main():
 	# print(REF_COORDS)
 	# plot_player(REF_COORDS[1:])
 
-	constructPanorama('clip7')
-	# bg = get_bg(CLIP1_PAN, repeat=[(300,400),(500,600)])
+	# constructPanorama('clip7')
+	# bg = get_bg('clip6', repeat=[(300,400),(500,600)])
 	# addPlayersToBackground(CLIP1_PAN)
+	# mergePanWithBg('clip6')
 	# subtractBackground(CLIP1_PAN)
 
 if __name__ == "__main__":
