@@ -496,22 +496,22 @@ def calcHomographyCourt(clip):
 
 def main():
 	global mouseCoords
-	# clip = PANORAMA_ROI['clip1']
-	# show_frame_in_matplot(clip['panorama_filename'], 300)
-	print("Get ready to track green1")
-	time.sleep(2)
-	mouseMotionTracking('clip1', 'green1', use_final=False)
-	print("Get ready to track green2")
-	time.sleep(2)
-	mouseMotionTracking('clip1', 'green2', use_final=False)
-	print("Get ready to track white1")
-	time.sleep(2)
-	mouseMotionTracking('clip1', 'white1', use_final=False)
-	print("Get ready to track white2")
-	time.sleep(2)
-	mouseMotionTracking('clip1', 'white2', use_final=False)
-	print("Get ready to track ball")
-	time.sleep(2)
+	# clip = PANORAMA_ROI['clip3']
+	# show_frame_in_matplot(clip['panorama_filename'], 100)
+	# print("Get ready to track green1")
+	# time.sleep(2)
+	# mouseMotionTracking('clip3', 'green1', use_final=False)
+	# print("Get ready to track green2")
+	# time.sleep(2)
+	# mouseMotionTracking('clip3', 'green2', use_final=False)
+	# print("Get ready to track white1")
+	# time.sleep(2)
+	# mouseMotionTracking('clip3', 'white1', use_final=False)
+	# print("Get ready to track white2")
+	# time.sleep(2)
+	# mouseMotionTracking('clip3', 'white2', use_final=False)
+	# print("Get ready to track ball")
+	# time.sleep(2)
 	mouseMotionTracking('clip1', 'ball', use_final=False)
 
 	# constructPanorama('clip3')
@@ -519,7 +519,6 @@ def main():
 	# addPlayersToBackground(CLIP1_PAN)
 	# mergePanWithBg('clip6')
 	# subtractBackground(CLIP1_PAN)
-	# h = calcHomographyCourt('clip1')
 
 
 if __name__ == "__main__":

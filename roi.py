@@ -204,7 +204,7 @@ PANORAMA_ROI = {
 		'vcourt_net_right'    : (372, 180),
 		'vcourt_center'       : (-1, -1),
 		'vcourt_top_left'     : (-1, -1),
-		'vcourt_top_right'    : (45, 190)
+		'vcourt_top_right'    : (48, 190)
 	},
 	'clip4' : {
 		'filename'       : './beachVolleyball/beachVolleyball4.mov',
