@@ -22,7 +22,7 @@ elif is_cv3():
 
 # Acknowledgements - The team would like to acknowledge the following resources referenced in our project
 # Processing video frames and writing to video file: http://www.pyimagesearch.com/2016/02/22/writing-to-video-with-opencv/
-# Lucas-Kanade optical flow tracker -
+# Lucas-Kanade optical flow tracker - http://docs.opencv.org/trunk/d7/d8b/tutorial_py_lucas_kanade.html
 
 # We define world origin as (0,0,0) to be at the center of the volleyball court.
 # The volleyball court floor is used as the plane for homography calculation purposes
@@ -33,17 +33,6 @@ elif is_cv3():
 # For purposes of feature extraction, we need to identify points that are good corners and appear consistently
 # in all frames of the clip
 # Size of olympic sized beach volleyball court - 8m wide by 16m long
-VCOURT_CENTER    = np.array([0,0])
-VCOURT_TOP_LEFT  = np.array([-400, -800])
-VCOURT_TOP_RIGHT = np.array([400, -800])
-VCOURT_BOT_LEFT  = np.array([-400, 800])
-VCOURT_BOT_RIGHT = np.array([400, 800])
-VCOURT_NET_LEFT  = np.array([-500,0])
-VCOURT_NET_RIGHT = np.array([500,0])
-VCOURT_LEFT_MID  = np.array([-400,0])
-VCOURT_RIGHT_MID = np.array([400,0])
-VCOURT_BOT_MID   = np.array([0,800])
-VCOURT_TOP_MID   = np.array([0,-800])
 
 def get_bg(clip, repeat=None):
 	""" 
@@ -441,12 +430,12 @@ def mouseMotionTracking(clip, obj, use_final=True):
 	mouseCoords = fillZeros(mouseCoords)
 
 	# Calc Homography
-	h = calcHomographyCourt(clip)
+	# h = calcHomographyCourt(clip)
 
 	# Transform to plane coordinates
-	for i in range(0, mouseCoords.shape[0]):
-		result = get_plane_coordinates(h, np.hstack((mouseCoords[i,:],1)))[0,0:2]
-		mouseCoords[i,:] = result
+	# for i in range(0, mouseCoords.shape[0]):
+	# 	result = get_plane_coordinates(h, np.hstack((mouseCoords[i,:],1)))[0,0:2]
+	# 	mouseCoords[i,:] = result
 
 	filename_key = 'player_%s_position_filename' % obj
 	tracking_end_frame_key = 'player_%s_tracking_end_frame' % obj
@@ -496,8 +485,10 @@ def calcHomographyCourt(clip):
 
 def main():
 	global mouseCoords
-	# clip = PANORAMA_ROI['clip3']
-	# show_frame_in_matplot(clip['panorama_filename'], 100)
+	# clip = PANORAMA_ROI['clip1']
+	# show_frame_in_matplot(clip['panorama_filename'], 300)
+
+	h = calcHomographyCourt('clip1')
 	# print("Get ready to track green1")
 	# time.sleep(2)
 	# mouseMotionTracking('clip3', 'green1', use_final=False)
@@ -512,7 +503,7 @@ def main():
 	# mouseMotionTracking('clip3', 'white2', use_final=False)
 	# print("Get ready to track ball")
 	# time.sleep(2)
-	mouseMotionTracking('clip1', 'ball', use_final=False)
+	# mouseMotionTracking('clip1', 'ball', use_final=False)
 
 	# constructPanorama('clip3')
 	# bg = get_bg('clip6', repeat=[(300,400),(500,600)])

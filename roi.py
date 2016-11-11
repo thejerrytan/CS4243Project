@@ -136,6 +136,7 @@ PANORAMA_ROI = {
 		'player_ball_tracking_end_frame' : 549,
 		'player_ball_tracking_start_frame' : 0,
 		'player_ball_position_filename' : './clip2_ball_position.txt',
+		'vcourt_points' : ['vcourt_bottom_left','vcourt_bottom_right','vcourt_net_left','vcourt_net_right','vcourt_center'],
 		'vcourt_bottom_left'  : (-1, -1),
 		'vcourt_bottom_right' : (-1, -1),
 		'vcourt_net_left'     : (176, 153),
@@ -152,7 +153,7 @@ PANORAMA_ROI = {
 		'end_frame'      : 350,
 		'original_shape' : (294, 636),
 		'panorama_shape' : (700, 300),
-		'ref_frame'      : 100,
+		'ref_frame'      : 50,
 		'pt1' : {
 			'x' : 120,
 			'y' : 150,
@@ -198,13 +199,15 @@ PANORAMA_ROI = {
 		'player_ball_tracking_end_frame' : 349,
 		'player_ball_tracking_start_frame' : 0,
 		'player_ball_position_filename' : './clip3_ball_position.txt',
-		'vcourt_bottom_left'  : (-1, -1),
-		'vcourt_bottom_right' : (-1, -1),
+		'vcourt_points' : ['vcourt_bottom_left','vcourt_bottom_right','vcourt_net_left','vcourt_net_right','vcourt_center'],
+		'vcourt_bottom_left'  : (685, 305),
+		'vcourt_bottom_right' : (690, 190),
 		'vcourt_net_left'     : (-1, -1),
-		'vcourt_net_right'    : (372, 180),
+		'vcourt_net_right'    : (322, 180),
 		'vcourt_center'       : (-1, -1),
 		'vcourt_top_left'     : (-1, -1),
-		'vcourt_top_right'    : (48, 190)
+		'vcourt_top_right'    : (48, 190),
+		'vcourt_right_mid'    : (370, 190)
 	},
 	'clip4' : {
 		'filename'       : './beachVolleyball/beachVolleyball4.mov',
@@ -260,6 +263,7 @@ PANORAMA_ROI = {
 		'player_ball_tracking_end_frame' : 999,
 		'player_ball_tracking_start_frame' : 0,
 		'player_ball_position_filename' : './clip4_ball_position.txt',
+		'vcourt_points' : ['vcourt_bottom_left','vcourt_bottom_right','vcourt_net_left','vcourt_net_right','vcourt_center'],
 		'vcourt_bottom_left'  : (-1, -1),
 		'vcourt_bottom_right' : (-1, -1),
 		'vcourt_net_left'     : (-1, -1),
@@ -322,6 +326,7 @@ PANORAMA_ROI = {
 		'player_ball_tracking_end_frame' : 999,
 		'player_ball_tracking_start_frame' : 0,
 		'player_ball_position_filename' : './clip5_ball_position.txt',
+		'vcourt_points' : ['vcourt_bottom_left','vcourt_bottom_right','vcourt_net_left','vcourt_net_right','vcourt_center'],
 		'vcourt_bottom_left'  : (-1, -1),
 		'vcourt_bottom_right' : (671, 326),
 		'vcourt_net_left'     : (80, 197),
@@ -385,6 +390,7 @@ PANORAMA_ROI = {
 		'player_ball_tracking_end_frame' : 378,
 		'player_ball_tracking_start_frame' : 0,
 		'player_ball_position_filename' : './clip6_ball_position.txt',
+		'vcourt_points' : ['vcourt_bottom_left','vcourt_bottom_right','vcourt_net_left','vcourt_net_right','vcourt_center'],
 		'vcourt_bottom_left'  : (-1, -1),
 		'vcourt_bottom_right' : (688, 238),
 		'vcourt_net_left'     : (-1, -1),
@@ -447,6 +453,7 @@ PANORAMA_ROI = {
 		'player_ball_tracking_end_frame' : 999,
 		'player_ball_tracking_start_frame' : 0,
 		'player_ball_position_filename' : './clip7_ball_position.txt',
+		'vcourt_points' : ['vcourt_bottom_left','vcourt_bottom_right','vcourt_net_left','vcourt_net_right','vcourt_center'],
 		'vcourt_bottom_left'  : (-1, -1),
 		'vcourt_bottom_right' : (612, 220),
 		'vcourt_net_left'     : (-1, -1),
@@ -465,6 +472,9 @@ PANORAMA_BLEND = {
 
 def motion_tracking(filename, ROI, start=0, end=None, maxCorners=3, skip=None):
 	""" 
+		Acknowledge : Lucas-Kanade optical flow tracker - Code taken from http://docs.opencv.org/trunk/d7/d8b/tutorial_py_lucas_kanade.html
+		with some modifications for our own use
+
 		Uses OpenCV to extract good corners and track the movement of those corners.
 		ROI is a mask to extract only features from this part of the image
 		start from frame no., with 1st frame in video as frame 0
