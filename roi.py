@@ -14,8 +14,8 @@ PLANE_COORDS = {
 	'vcourt_left_mid' : (-400,0),
 	'vcourt_right_mid' : (400,0),
 	'vcourt_bot_mid' : (0,800),
-	'vcourt_top_mid' : (0,-800),
-	'vcourt_exp1' : (300, -100)
+    'vcourt_top_mid' : (0,-800),
+    'vcourt_exp1' : (300, -100)
 }
 
 PANORAMA_ROI = {
@@ -144,7 +144,8 @@ PANORAMA_ROI = {
 		'vcourt_net_right'    : (607, 176),
 		'vcourt_center'       : (-1, -1),
 		'vcourt_top_left'     : (-1, -1),
-		'vcourt_top_right'    : (545, 135)
+		'vcourt_top_right'    : (545, 135),
+		'plane_homography_filename' : './clip2_plane_homography.txt'
 	},
 	'clip3' : {
 		'filename'       : './beachVolleyball/beachVolleyball3.mov',
@@ -200,15 +201,16 @@ PANORAMA_ROI = {
 		'player_ball_tracking_end_frame' : 349,
 		'player_ball_tracking_start_frame' : 0,
 		'player_ball_position_filename' : './clip3_ball_position.txt',
-		'vcourt_points' : ['vcourt_bottom_left','vcourt_bottom_right','vcourt_net_left','vcourt_net_right','vcourt_center'],
+		'vcourt_points' : ['vcourt_bottom_left','vcourt_bottom_right','vcourt_net_right','vcourt_top_right'],
 		'vcourt_bottom_left'  : (685, 305),
 		'vcourt_bottom_right' : (690, 190),
 		'vcourt_net_left'     : (-1, -1),
 		'vcourt_net_right'    : (322, 180),
 		'vcourt_center'       : (-1, -1),
 		'vcourt_top_left'     : (-1, -1),
-		'vcourt_top_right'    : (48, 190),
-		'vcourt_right_mid'    : (370, 190)
+		'vcourt_top_right'    : (-50, 190),
+		'vcourt_right_mid'    : (317, 190),
+		'plane_homography_filename' : './clip3_plane_homography.txt'
 	},
 	'clip4' : {
 		'filename'       : './beachVolleyball/beachVolleyball4.mov',
@@ -271,7 +273,8 @@ PANORAMA_ROI = {
 		'vcourt_net_right'    : (-1, -1),
 		'vcourt_center'       : (-1, -1),
 		'vcourt_top_left'     : (-1, -1),
-		'vcourt_top_right'    : (-1, -1)
+		'vcourt_top_right'    : (-1, -1),
+		'plane_homography_filename' : './clip4_plane_homography.txt'
 	},
 	'clip5' : {
 		'filename'       : './beachVolleyball/beachVolleyball5.mov',
@@ -334,7 +337,8 @@ PANORAMA_ROI = {
 		'vcourt_net_right'    : (421, 185),
 		'vcourt_center'       : (253, 192),
 		'vcourt_top_left'     : (-1, -1),
-		'vcourt_top_right'    : (-1, -1)
+		'vcourt_top_right'    : (-1, -1),
+		'plane_homography_filename' : './clip5_plane_homography.txt'
 	},
 	'clip6' : {
 		'filename'       : './beachVolleyball/beachVolleyball6.mov',
@@ -345,7 +349,7 @@ PANORAMA_ROI = {
 		'end_frame'      : 380,
 		'original_shape' : (350, 636),
 		'panorama_shape' : (700, 350),
-		'ref_frame'      : 75,
+		'ref_frame'      : 50,
 		'pt1' : {
 			'x' : 600,
 			'y' : 100,
@@ -391,15 +395,17 @@ PANORAMA_ROI = {
 		'player_ball_tracking_end_frame' : 378,
 		'player_ball_tracking_start_frame' : 0,
 		'player_ball_position_filename' : './clip6_ball_position.txt',
-		'vcourt_points' : ['vcourt_bottom_right', 'vcourt_net_right','vcourt_net_center','vcourt_exp1'],
-		'vcourt_bottom_left'  : (-1, -1),
-		'vcourt_bottom_right' : (695, 242),
-		'vcourt_net_left'     : (-1, -1),
-		'vcourt_net_right'    : (333, 234),
-		'vcourt_center'       : (330, 304),
-		'vcourt_top_left'     : (-1, -1),
-		'vcourt_top_right'    : (-1, -1),
-		'vcourt_exp1' 	      : (288, 250)
+		'vcourt_points' : ['vcourt_bottom_left','vcourt_bottom_right','vcourt_net_left','vcourt_net_right','vcourt_center'],
+        'vcourt_points' : ['vcourt_bottom_right', 'vcourt_net_right','vcourt_net_center','vcourt_exp1'],
+        'vcourt_bottom_left'  : (-1, -1),
+        'vcourt_bottom_right' : (695, 242),
+        'vcourt_net_left'     : (-1, -1),
+        'vcourt_net_right'    : (333, 234),
+        'vcourt_center'       : (330, 304),
+        'vcourt_top_left'     : (-1, -1),
+        'vcourt_top_right'    : (-1, -1),
+        'vcourt_exp1' 	      : (288, 250)
+		'plane_homography_filename' : './clip6_plane_homography.txt'
 	},
 	'clip7' : {
 		'filename'          : './beachVolleyball/beachVolleyball7.mov',
@@ -462,7 +468,8 @@ PANORAMA_ROI = {
 		'vcourt_net_right'    : (259, 208),
 		'vcourt_center'       : (259, 278),
 		'vcourt_top_left'     : (-1, -1),
-		'vcourt_top_right'    : (-1, -1)
+		'vcourt_top_right'    : (-1, -1),
+		'plane_homography_filename' : './clip7_plane_homography.txt'
 	}
 }
 
