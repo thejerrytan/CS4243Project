@@ -388,8 +388,8 @@ def mouseMotionTracking(clip, obj, use_final=True):
 		use_final - default True, use the final panorama clip, else use the original panorama clip without background
 
 		Here we follow this convention:
-		red1   - means red team player who stands at the back of the court
-		red2   - means red team player who stands at the front of the court
+		red1   - means red team player who stands at the back of the court (if ambiguous, player standing on the left)
+		red2   - means red team player who stands at the front of the court (if ambiguous, player standing on the right)
 		green1 - means green team player who stands at the back of the court
 		green2 - means green team player who stands at the front of the court
 		white1 - means white team player who stands at the back of the court
@@ -503,9 +503,9 @@ def main():
 	# mouseMotionTracking('clip3', 'white2', use_final=False)
 	# print("Get ready to track ball")
 	# time.sleep(2)
-	# mouseMotionTracking('clip1', 'ball', use_final=False)
+	# mouseMotionTracking('clip3', 'ball', use_final=False)
 
-	# constructPanorama('clip3')
+	# constructPanorama('clip2')
 	# bg = get_bg('clip6', repeat=[(300,400),(500,600)])
 	# addPlayersToBackground(CLIP1_PAN)
 	# mergePanWithBg('clip6')
