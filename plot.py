@@ -1,9 +1,14 @@
 from __future__ import division
 
+import glob
+import math
+import os
+import subprocess
+
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-import math
+import cv
 
 WINDOW_SIZE = 10
 
@@ -28,6 +33,11 @@ def plot_topdown(clip):
     # player1[1] = smooth(player1[:, 1])
 
     # print smooth(np.array([0, 1, 2, 3, 15, 3, 5, 6, 7, 8, 10, 8, 10, 11, 12]))
+
+    preprocess_player(player1)
+    preprocess_player(player2)
+    preprocess_player(player3)
+    preprocess_player(player4)
 
     _, jump1 = smooth_position_and_count_jump(player1)
     _, jump2 = smooth_position_and_count_jump(player2)
@@ -64,6 +74,12 @@ def plot_topdown(clip):
     plt.figure()
     plt.ion()
 
+    if not os.path.exists("./topdown/clip%d" % clip):
+        os.makedirs("./topdown/clip%d" % clip)
+
+    fourcc = cv.CV_FOURCC('m', 'p', '4', 'v')
+    writer = None
+
     for i in range(0, frames):
         if i % 10 == 0:
             print i
@@ -82,13 +98,28 @@ def plot_topdown(clip):
         plt.scatter(player4[i, 1], player4[i, 0], edgecolor='yellow', facecolor='yellow', s=9 ** 2, marker='o')
         plt.scatter(ball[i, 1], ball[i, 0], edgecolor='blue', facecolor='blue', s=9 ** 2, marker='o')
 
+        plt.savefig("./topdown/clip%d/frame.png" % (clip))
+        frame = cv2.imread("./topdown/clip%d/frame.png" % (clip), cv2.IMREAD_COLOR)
+
+        if writer is None:
+            writer = cv2.VideoWriter("./topdown/clip%d.mov" % clip, fourcc, 60, (frame.shape[1], frame.shape[0]), True)
+
+        writer.write(frame)
         plt.show()
         plt.pause(0.0005)
 
         _, frame = cap.read()
         cv2.imshow("original:", frame)
 
-    return
+    writer.release()
+
+
+def preprocess_player(arr):
+    for i in range(1, len(arr)):
+        if arr[0, 1] < 0 and arr[i, 1] > 0:
+            arr[i, 1] = 0
+        if arr[0, 1] > 0 and arr[i, 1] < 0:
+            arr[i, 1] = 0
 
 
 def interpolate_ball(arr):
@@ -154,4 +185,4 @@ def smooth_position_and_count_jump(arr):
 
 
 if __name__ == '__main__':
-    plot_topdown(6)
+    plot_topdown(5)
