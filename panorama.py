@@ -99,6 +99,51 @@ def constructPanorama(clipFileName):
     return image
 
 
+def isInBound(x, y, w, h):
+    return 0 <= x < w and 0 <= y < h
+
+def isValidPoint(h, w, fh, fw, img):
+    rec_size = 5
+
+    # top left
+    th = h - rec_size
+    tw = w - rec_size
+
+    if isInBound(th, tw, fh, fw):
+        if (img[th, tw, 0] + img[th, tw, 1] + img[th, tw, 2] < PANORAMA_BLEND['TRANSPARENT_THRESHOLD']):
+            return False
+    # bottom left
+    th = h + rec_size
+    tw = w - rec_size
+    if isInBound(th, tw, fh, fw):
+        if (img[th, tw, 0] + img[th, tw, 1] + img[th, tw, 2] < PANORAMA_BLEND['TRANSPARENT_THRESHOLD']):
+            return False
+
+    # top right
+    th = h - rec_size
+    tw = w + rec_size
+    if isInBound(th, tw, fh, fw):
+        if (img[th, tw, 0] + img[th, tw, 1] + img[th, tw, 2] < PANORAMA_BLEND['TRANSPARENT_THRESHOLD']):
+            return False
+
+    # bottom right
+    th = h + rec_size
+    tw = w + rec_size
+    if isInBound(th, tw, fh, fw):
+        if (img[th, tw, 0] + img[th, tw, 1] + img[th, tw, 2] < PANORAMA_BLEND['TRANSPARENT_THRESHOLD']):
+            return False
+
+    # the point itself
+
+    th = h
+    tw = w
+    if isInBound(th, tw, fh, fw):
+        if (img[th, tw, 0] + img[th, tw, 1] + img[th, tw, 2] < PANORAMA_BLEND['TRANSPARENT_THRESHOLD']):
+            return False
+
+    # All passed, return true
+    return True
+
 def blendFrames(clipFileName):
     cap = cv2.VideoCapture(clipFileName)
     fw = int(cap.get(cv.CV_CAP_PROP_FRAME_WIDTH))
@@ -117,7 +162,8 @@ def blendFrames(clipFileName):
             print i
             for h in range (fh):
                 for w in range (fw):
-                    if frame[h, w, 0] + frame[h, w, 1] + frame[h, w, 2] > PANORAMA_BLEND['TRANSPARENT_THRESHOLD']:
+                    # if frame[h, w, 0] + frame[h, w, 1] + frame[h, w, 2] > PANORAMA_BLEND['TRANSPARENT_THRESHOLD']:
+                    if isValidPoint(h, w, fh, fw, frame):
                         count[h, w] += 1
                         image[h, w, :] += frame[h, w, :]
 
@@ -133,7 +179,27 @@ def blendFrames(clipFileName):
 # CLIP1 = './beachVolleyball/beachVolleyball1.mov'
 
 # constructPanorama(CLIP1)
-image = blendFrames('./beachVolleyball/beachVolleyball6_panorama.mov')
-cv2.imwrite("img_6.jpg", image)
+# image = blendFrames('./beachVolleyball/beachVolleyball1_panorama.mov')
+# cv2.imwrite("img_1.jpg", image)
+
+
+image = blendFrames('./beachVolleyball/beachVolleyball2_panorama.mov')
+cv2.imwrite("panorama_background_2.jpg", image)
+
+#
+# image = blendFrames('./beachVolleyball/beachVolleyball3_panorama.mov')
+# cv2.imwrite("panorama_background_3.jpg", image)
+#
+#
+# image = blendFrames('./beachVolleyball/beachVolleyball5_panorama.mov')
+# cv2.imwrite("panorama_background_5.jpg", image)
+#
+#
+# image = blendFrames('./beachVolleyball/beachVolleyball6_panorama.mov')
+# cv2.imwrite("panorama_background_6.jpg", image)
+#
+#
+# image = blendFrames('./beachVolleyball/beachVolleyball7_panorama.mov')
+# cv2.imwrite("panorama_background_7.jpg", image)
 
 print "done"

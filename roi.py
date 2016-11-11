@@ -443,8 +443,8 @@ PANORAMA_ROI = {
 
 
 PANORAMA_BLEND = {
-    'PANORAMA_FRAME_STEP' : 10,
-        'TRANSPARENT_THRESHOLD' : 5
+    'PANORAMA_FRAME_STEP': 10,
+    'TRANSPARENT_THRESHOLD': 10
 }
 
 def motion_tracking(filename, ROI, start=0, end=None, maxCorners=3, skip=None):
