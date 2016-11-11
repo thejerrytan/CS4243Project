@@ -23,17 +23,24 @@ def plot_topdown(clip):
 
     # print smooth(np.array([0, 1, 2, 3, 15, 3, 5, 6, 7, 8, 10, 8, 10, 11, 12]))
 
-    smooth_position(player1)
-    smooth_position(player2)
-    smooth_position(player3)
-    smooth_position(player4)
+    _, jump1 = smooth_position_and_count_jump(player1)
+    _, jump2 = smooth_position_and_count_jump(player2)
+    _, jump3 = smooth_position_and_count_jump(player3)
+    _, jump4 = smooth_position_and_count_jump(player4)
+
+    print "Jump Count 1: ", jump1
+    print "Jump Count 2: ", jump2
+    print "Jump Count 3: ", jump3
+    print "Jump Count 4: ", jump4
 
     plt.figure()
     plt.ion()
 
 
     for i in range(0, frames):
-        print i
+        if i % 100 == 0:
+            print i
+
         plt.clf()
         plt.xlim([-1000, 1000])
         plt.ylim([-1000, 1000])
