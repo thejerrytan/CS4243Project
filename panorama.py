@@ -1,9 +1,12 @@
 import numpy as np
 import cv2
-try:
-    import cv2.cv as cv
-except ImportError as e:
-    import cv2 as cv
+import cv2.cv as cv
+from roi import *
+from matplotlib import pyplot as plt
+# try:
+#     import cv2.cv as cv
+# except ImportError as e:
+#     import cv2 as cv
 from matplotlib import pyplot as plt
 
 def findGoodMatches(img1, img2):
@@ -66,10 +69,10 @@ def cal_homography(img1, img2):
 
 def constructPanorama(clipFileName):
     cap = cv2.VideoCapture(clipFileName)
-    fw = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    fh = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fps = int(cap.get(cv2.CAP_PROP_FPS))
-    fc = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    fw = int(cap.get(cv2.cv.CAP_PROP_FRAME_WIDTH))
+    fh = int(cap.get(cv2.cv.CAP_PROP_FRAME_HEIGHT))
+    fps = int(cap.get(cv2.cv.CAP_PROP_FPS))
+    fc = int(cap.get(cv2.cv.CAP_PROP_FRAME_COUNT))
     image = np.zeros([fw, fh, 3])
 
     img1 = cap.read()[1][:, :, :]
@@ -95,8 +98,42 @@ def constructPanorama(clipFileName):
     cv2.imwrite("img_result.jpg", result)
     return image
 
-CLIP1 = './beachVolleyball/beachVolleyball1.mov'
 
-constructPanorama(CLIP1)
+def blendFrames(clipFileName):
+    cap = cv2.VideoCapture(clipFileName)
+    fw = int(cap.get(cv.CV_CAP_PROP_FRAME_WIDTH))
+    fh = int(cap.get(cv.CV_CAP_PROP_FRAME_HEIGHT))
+    fps = int(cap.get(cv.CV_CAP_PROP_FPS))
+    fc = int(cap.get(cv.CV_CAP_PROP_FRAME_COUNT))
+
+    image = np.zeros([fh, fw, 3], float)
+    count = np.zeros([fh, fw])
+
+    print "frame count = ", fc
+
+    for i in range(fc):
+        ret, frame = cap.read()
+        if i % PANORAMA_BLEND['PANORAMA_FRAME_STEP'] == 0:
+            print i
+            for h in range (fh):
+                for w in range (fw):
+                    if frame[h, w, 0] + frame[h, w, 1] + frame[h, w, 2] > PANORAMA_BLEND['TRANSPARENT_THRESHOLD']:
+                        count[h, w] += 1
+                        image[h, w, :] += frame[h, w, :]
+
+    for h in range(fh):
+        for w in range(fw):
+            if (count[h, w] > 0):
+                for i in range (3):
+                    image[h, w, i] = float(image[h, w, i]) / count[h, w]
+
+    return image
+
+
+# CLIP1 = './beachVolleyball/beachVolleyball1.mov'
+
+# constructPanorama(CLIP1)
+image = blendFrames('./beachVolleyball/beachVolleyball6_panorama.mov')
+cv2.imwrite("img_6.jpg", image)
 
 print "done"
