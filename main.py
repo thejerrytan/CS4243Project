@@ -108,7 +108,11 @@ def show_frame_in_matplot(filename, num, roi=None):
 		bottom_right = (roi['x']+roi['w'], roi['y']+roi['h'])
 		frame = cv2.rectangle(frame, top_left, bottom_right, (0,0,255), 3)	
 	plt.figure()
-	plt.imshow(frame)
+	# axes = plt.gca()
+	# axes.autoscale(False)
+	# axes.set_xlim(-100, 800)
+	# axes.set_ylim(-100, 400)
+	plt.imshow(frame, origin='upper')
 	plt.show()
 	cap.release()
 
@@ -119,7 +123,7 @@ def generate_ROI(shape, x, y, w, h):
 	return mask
 
 def get_plane_coordinates(H, img):
-	""" Given img point, [uc, vc, 1], apply Homography to obtain the plane/world coordinates of the players (up, up, 1)"""
+	""" Given img point, [uc, vc, 1], apply Homography to obtain the plane/world coordinates of the players (up, vp, 1)"""
 	img = np.matrix(img).T
 	try:
 		result = np.dot(la.inv(H), img)
@@ -435,9 +439,18 @@ def mouseMotionTracking(clip, obj, use_final=True):
 
 	# Post processing
 	mouseCoords = fillZeros(mouseCoords)
+
+	# Calc Homography
+	h = calcHomographyCourt(clip)
+
+	# Transform to plane coordinates
+	for i in range(0, mouseCoords.shape[0]):
+		result = get_plane_coordinates(h, np.hstack((mouseCoords[i,:],1)))[0,0:2]
+		mouseCoords[i,:] = result
+
 	filename_key = 'player_%s_position_filename' % obj
 	tracking_end_frame_key = 'player_%s_tracking_end_frame' % obj
-	np.savetxt(PANORAMA_ROI[clip][filename_key], mouseCoords[0:int(PANORAMA_ROI[clip][tracking_end_frame_key]),:])
+	np.savetxt(PANORAMA_ROI[clip][filename_key], mouseCoords[0:int(PANORAMA_ROI[clip][tracking_end_frame_key]),:], fmt='%1.4f')
 
 	# Clear mouseCoords and reset count
 	mouseCoords = np.zeros((1000,2))
@@ -459,148 +472,55 @@ def fillZeros(arr):
 			arr[i] = first_non_zero
 	return arr
 
+def calcHomographyCourt(clip):
+	vcourt_pts  = PANORAMA_ROI[clip]['vcourt_points']
+	dstPts = np.vstack([np.array(PANORAMA_ROI[clip][pt]) for pt in vcourt_pts]) # Camera
+	srcPts = np.vstack([np.array(PLANE_COORDS[pt]) for pt in vcourt_pts]) # Plane coordinates
+
+	h, mask = cv2.findHomography(srcPts, dstPts, cv2.RANSAC, 5.0)
+
+	# print(h)
+	# Check homography
+	tol = 10
+	for i in range(0, dstPts.shape[0]):
+		coord = get_plane_coordinates(h, np.hstack((dstPts[i,:], 1)))
+		for j in range(0, coord.shape[1]-1):
+			if coord[0,j] - srcPts[i,j] > tol:
+				key = vcourt_pts[i]
+				print("Warning: homography for point %s is not well-formed" % key)
+				print("Original : %.2f, Transformed : %.2f" % (srcPts[i,j], coord[0,j]))
+
+	np.savetxt(PANORAMA_ROI[clip]['plane_homography_filename'], h, fmt='%1.4f')
+
+	return h
+
 def main():
 	global mouseCoords
-	clip = PANORAMA_ROI['clip1']
-	show_frame_in_matplot(clip['panorama_filename'], 100)
-	# print("Get ready to track green1")
-	# time.sleep(2)
-	# mouseMotionTracking('clip7', 'red1', use_final=False)
-	# print("Get ready to track green2")
-	# time.sleep(2)
-	# mouseMotionTracking('clip7', 'red2', use_final=False)
-	# print("Get ready to track white1")
-	# time.sleep(2)
-	# mouseMotionTracking('clip7', 'white1', use_final=False)
-	# print("Get ready to track white2")
-	# time.sleep(2)
-	# mouseMotionTracking('clip7', 'white2', use_final=False)
-	# print("Get ready to track ball")
-	# time.sleep(2)
-	# mouseMotionTracking('clip7', 'ball', use_final=False)
-	
-	# playerRed1_roi = generate_ROI(clip['panorama_roi_shape'], clip['playerRed1']['x'], clip['playerRed1']['y'], clip['playerRed1']['w'], clip['playerRed1']['h'])
-	# playerRed1_pts = motion_tracking(clip['panorama_final_filename'], playerRed1_roi, start=clip['player_tracking_start_frame'], end=clip['player_tracking_end_frame'], maxCorners=10)
-	# print(playerRed1_pts.shape)
+	# clip = PANORAMA_ROI['clip1']
+	# show_frame_in_matplot(clip['panorama_filename'], 300)
+	print("Get ready to track green1")
+	time.sleep(2)
+	mouseMotionTracking('clip1', 'green1', use_final=False)
+	print("Get ready to track green2")
+	time.sleep(2)
+	mouseMotionTracking('clip1', 'green2', use_final=False)
+	print("Get ready to track white1")
+	time.sleep(2)
+	mouseMotionTracking('clip1', 'white1', use_final=False)
+	print("Get ready to track white2")
+	time.sleep(2)
+	mouseMotionTracking('clip1', 'white2', use_final=False)
+	print("Get ready to track ball")
+	time.sleep(2)
+	mouseMotionTracking('clip1', 'ball', use_final=False)
 
-	# Specify regions of interest for tracking objects
-	# show_frame_in_matplot('./beachVolleyball1_panorama_with_players.mov', 0)
-
-	# ROI_CLIP1_VCOURT_BR = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_BOT_RIGHT['x'], CLIP1_VCOURT_BOT_RIGHT['y'], CLIP1_VCOURT_BOT_RIGHT['w'], CLIP1_VCOURT_BOT_RIGHT['h'])
-	# ROI_CLIP1_VCOURT_NR = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_NET_RIGHT['x'], CLIP1_VCOURT_NET_RIGHT['y'], CLIP1_VCOURT_NET_RIGHT['w'], CLIP1_VCOURT_NET_RIGHT['h'])
-	# ROI_CLIP1_VCOURT_NL = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_NET_LEFT['x'], CLIP1_VCOURT_NET_LEFT['y'], CLIP1_VCOURT_NET_LEFT['w'], CLIP1_VCOURT_NET_LEFT['h'])
-	# ROI_CLIP1_VCOURT_RM = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_RIGHT_MID['x'], CLIP1_VCOURT_RIGHT_MID['y'], CLIP1_VCOURT_RIGHT_MID['w'], CLIP1_VCOURT_RIGHT_MID['h'])
-	# ROI_CLIP1_VCOURT_LM = generate_ROI(CLIP1_SHAPE, CLIP1_VCOURT_LEFT_MID['x'], CLIP1_VCOURT_LEFT_MID['y'], CLIP1_VCOURT_LEFT_MID['w'], CLIP1_VCOURT_LEFT_MID['h'])
-
-	# Track image coordinates of known points on the floor plane
-	# clip1_vcourt_br = motion_tracking(CLIP1, ROI_CLIP1_VCOURT_BR, start=0, end=630, maxCorners=1, skip=(240,280))
-	# clip1_vcourt_nl = motion_tracking(CLIP1, ROI_CLIP1_VCOURT_NL, start=0, end=630, maxCorners=1)
-	# clip1_vcourt_nr = motion_tracking(CLIP1, ROI_CLIP1_VCOURT_NR, start=0, end=630, maxCorners=1)
-	# clip1_vcourt_rm = motion_tracking(CLIP1, ROI_CLIP1_VCOURT_RM, start=0, end=630, maxCorners=1)
-	# clip1_vcourt_lm = motion_tracking(CLIP1, ROI_CLIP1_VCOURT_LM, start=0, end=630, maxCorners=1)
-	
-	# np.savetxt('./clip1_vcourt_br.txt', clip1_vcourt_br)
-	# np.savetxt('./clip1_vcourt_nl.txt', clip1_vcourt_nl)
-	# np.savetxt('./clip1_vcourt_nr.txt', clip1_vcourt_nr)
-	# np.savetxt('./clip1_vcourt_rm.txt', clip1_vcourt_rm)
-	# np.savetxt('./clip1_vcourt_lm.txt', clip1_vcourt_lm)
-
-	# Make sure they are of right dimensions
-	# print(len(clip1_vcourt_br))
-	# print(len(clip1_vcourt_nl))
-	# print(len(clip1_vcourt_nr))
-	# print(len(clip1_vcourt_rm))
-	# print(len(clip1_vcourt_lm))
-	
-	# Track players
-	# ROI_CLIP1_GREEN_P1 = generate_ROI(CLIP1_SHAPE, CLIP1_GREEN_P1_ROI['x'], CLIP1_GREEN_P1_ROI['y'], CLIP1_GREEN_P1_ROI['w'], CLIP1_GREEN_P1_ROI['h'])
-	# clip1_p1_feet = motion_tracking(CLIP1, ROI_CLIP1_GREEN_P1, start=360, end=630, maxCorners=3)
-	# clip1_p1_feet = clip1_p1_feet[1::2,:]
-	# print(clip1_p1_feet.shape)
-	# np.savetxt('./clip1_p1_feet.txt', clip1_p1_feet)
-
-	# ROI_CLIP1_GREEN_P2 = generate_ROI(CLIP1_SHAPE, CLIP1_GREEN_P2_ROI['x'], CLIP1_GREEN_P2_ROI['y'], CLIP1_GREEN_P2_ROI['w'], CLIP1_GREEN_P2_ROI['h'])
-	# clip1_p2_feet = motion_tracking(CLIP1, ROI_CLIP1_GREEN_P2, start=0, end=720, maxCorners=1)
-	# print(clip1_p2_feet) # Take 1st corner which is left knee
-
-	# pts = np.vstack((
-	# 	VCOURT_BOT_RIGHT,
-	# 	VCOURT_NET_LEFT,
-	# 	VCOURT_NET_RIGHT,
-	# 	VCOURT_RIGHT_MID,
-	# 	VCOURT_LEFT_MID
-	# 	))
-	# H = np.zeros((3,3))
-
-	# clip1_vcourt_br = np.loadtxt('./clip1_vcourt_br.txt')
-	# clip1_vcourt_nl = np.loadtxt('./clip1_vcourt_nl.txt')
-	# clip1_vcourt_nr = np.loadtxt('./clip1_vcourt_nr.txt')
-	# clip1_vcourt_rm = np.loadtxt('./clip1_vcourt_rm.txt')
-	# clip1_vcourt_lm = np.loadtxt('./clip1_vcourt_lm.txt')
-	# clip1_p1_feet   = np.loadtxt('./clip1_p1_feet.txt')
-	# Get homography matrix for each frame
-	# print(clip1_p1_feet.shape)
-	# print(clip1_vcourt_br.shape)
-	# for i in range(0, 500):
-	# 	cam = np.vstack((
-	# 		clip1_vcourt_br[i,:], 
-	# 		clip1_vcourt_nl[i,:],
-	# 		clip1_vcourt_nr[i,:],
-	# 		clip1_vcourt_rm[i,:],
-	# 		clip1_vcourt_lm[i,:]))
-	# 	h, mask = cv2.findHomography(pts, cam, cv2.RANSAC, 5.0)
-	# 	if h is not None:
-	# 		H = np.vstack((H, h))
-	# 	else:
-	# 		print(i)
-	# H = H[3:] # Discard first frame of 0s
-	
-	# Get plane coordinates for each player position in the image
-	# PLAYER_COORDS = np.zeros((1,3))
-	# for i in range(360, clip1_p1_feet.shape[0]):
-	# 	coord = get_plane_coordinates(H[3*i:3*i+3], np.hstack((clip1_p1_feet[i,:],1)))
-	# 	PLAYER_COORDS = np.vstack((PLAYER_COORDS, coord))
-	# np.savetxt('./player.txt', PLAYER_COORDS[1:,:])
-	# pts = np.loadtxt('./player.txt')
-	# plot_player(pts)
-
-	# Verify H by getting back reference pts in plane coordinates
-	# REF_COORDS = np.zeros((1,3))
-	# for i in range(360, clip1_p1_feet.shape[0]):
-	# 	coord = get_plane_coordinates(H[3*i:3*i+3], np.hstack((clip1_vcourt_br[i,:],1)))
-	# 	REF_COORDS = np.vstack((REF_COORDS, coord))
-	# print(REF_COORDS)
-	# plot_player(REF_COORDS)
-
-	# for i in range(0, clip1_p1_feet.shape[0]):
-	# 	coord = get_plane_coordinates(H[3*i:3*i+3], np.hstack((clip1_vcourt_nl[i,:],1)))
-	# 	REF_COORDS = np.vstack((REF_COORDS, coord))
-	# print(REF_COORDS)
-	# plot_player(REF_COORDS[1:])
-
-	# for i in range(0, clip1_p1_feet.shape[0]):
-	# 	coord = get_plane_coordinates(H[3*i:3*i+3], np.hstack((clip1_vcourt_nr[i,:],1)))
-	# 	REF_COORDS = np.vstack((REF_COORDS, coord))
-	# print(REF_COORDS)
-	# plot_player(REF_COORDS[1:])
-
-	# for i in range(0, clip1_p1_feet.shape[0]):
-	# 	coord = get_plane_coordinates(H[3*i:3*i+3], np.hstack((clip1_vcourt_rm[i,:],1)))
-	# 	REF_COORDS = np.vstack((REF_COORDS, coord))
-	# print(REF_COORDS)
-	# plot_player(REF_COORDS[1:])
-
-	# for i in range(0, clip1_p1_feet.shape[0]):
-	# 	coord = get_plane_coordinates(H[3*i:3*i+3], np.hstack((clip1_vcourt_lm[i,:],1)))
-	# 	REF_COORDS = np.vstack((REF_COORDS, coord))
-	# print(REF_COORDS)
-	# plot_player(REF_COORDS[1:])
-
-	# constructPanorama('clip7')
+	# constructPanorama('clip3')
 	# bg = get_bg('clip6', repeat=[(300,400),(500,600)])
 	# addPlayersToBackground(CLIP1_PAN)
 	# mergePanWithBg('clip6')
 	# subtractBackground(CLIP1_PAN)
+	# h = calcHomographyCourt('clip1')
+
 
 if __name__ == "__main__":
 	main()

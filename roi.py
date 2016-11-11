@@ -3,6 +3,20 @@ import math
 import numpy.linalg as la
 import cv2
 
+PLANE_COORDS = {
+	'vcourt_center' : (0,0),
+	'vcourt_top_left' : (-400,-800),
+	'vcourt_top_right' : (400,-800),
+	'vcourt_bottom_left': (-400,800),
+	'vcourt_bottom_right' : (400,800),
+	'vcourt_net_left' : (-500,0),
+	'vcourt_net_right' : (500,0),
+	'vcourt_left_mid' : (-400,0),
+	'vcourt_right_mid' : (400,0),
+	'vcourt_bot_mid' : (0,800),
+	'vcourt_top_mid' : (0,-800)
+}
+
 PANORAMA_ROI = {
 	'clip1' : {
 		'filename'       : './beachVolleyball/beachVolleyball1.mov',
@@ -58,13 +72,15 @@ PANORAMA_ROI = {
 		'player_ball_tracking_end_frame' : 629,
 		'player_ball_tracking_start_frame' : 0,
 		'player_ball_position_filename' : './clip1_ball_position.txt',
-		'vcourt_bottom_left'  : (-1, -1),
+		'vcourt_points' : ['vcourt_bottom_left','vcourt_bottom_right','vcourt_net_left','vcourt_net_right','vcourt_center'],
+		'vcourt_bottom_left'  : (191,362),
 		'vcourt_bottom_right' : (472, 159),
-		'vcourt_net_left'     : (63, 153),
+		'vcourt_net_left'     : (-50, 40), # HACKED POINT!!!
 		'vcourt_net_right'    : (315, 96),
-		'vcourt_center'       : (224, 115),
+		'vcourt_center'       : (209, 117),
 		'vcourt_top_left'     : (-1, -1),
-		'vcourt_top_right'    : (-1, -1)
+		'vcourt_top_right'    : (-1, -1),
+		'plane_homography_filename' : './clip1_plane_homography.txt'
 	},
 	'clip2' : {
 		'filename'       : './beachVolleyball/beachVolleyball2.mov',
@@ -156,7 +172,7 @@ PANORAMA_ROI = {
 			'w' : 30
 		},
 		'pt4' : {
-			'x' : 120,
+			'x' : 280,
 			'y' : 250,
 			'h' : 20,
 			'w' : 20
