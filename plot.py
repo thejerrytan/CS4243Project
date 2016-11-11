@@ -112,4 +112,4 @@ def smooth_position_and_count_jump(arr):
 
 
 if __name__ == '__main__':
-    plot_topdown(1)
+    plot_topdown(3)

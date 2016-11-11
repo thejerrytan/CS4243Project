@@ -395,7 +395,6 @@ PANORAMA_ROI = {
 		'player_ball_tracking_end_frame' : 378,
 		'player_ball_tracking_start_frame' : 0,
 		'player_ball_position_filename' : './clip6_ball_position.txt',
-		'vcourt_points' : ['vcourt_bottom_left','vcourt_bottom_right','vcourt_net_left','vcourt_net_right','vcourt_center'],
         'vcourt_points' : ['vcourt_bottom_right', 'vcourt_net_right','vcourt_net_center','vcourt_exp1'],
         'vcourt_bottom_left'  : (-1, -1),
         'vcourt_bottom_right' : (695, 242),

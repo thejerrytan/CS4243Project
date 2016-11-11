@@ -430,12 +430,12 @@ def mouseMotionTracking(clip, obj, use_final=True):
 	mouseCoords = fillZeros(mouseCoords)
 
 	# Calc Homography
-	# h = calcHomographyCourt(clip)
+	h = calcHomographyCourt(clip)
 
 	# Transform to plane coordinates
-	# for i in range(0, mouseCoords.shape[0]):
-	# 	result = get_plane_coordinates(h, np.hstack((mouseCoords[i,:],1)))[0,0:2]
-	# 	mouseCoords[i,:] = result
+	for i in range(0, mouseCoords.shape[0]):
+		result = get_plane_coordinates(h, np.hstack((mouseCoords[i,:],1)))[0,0:2]
+		mouseCoords[i,:] = result
 
 	filename_key = 'player_%s_position_filename' % obj
 	tracking_end_frame_key = 'player_%s_tracking_end_frame' % obj
@@ -465,7 +465,10 @@ def calcHomographyCourt(clip):
 	vcourt_pts  = PANORAMA_ROI[clip]['vcourt_points']
 	dstPts = np.vstack([np.array(PANORAMA_ROI[clip][pt]) for pt in vcourt_pts]) # Camera
 	srcPts = np.vstack([np.array(PLANE_COORDS[pt]) for pt in vcourt_pts]) # Plane coordinates
-
+	
+	dstPts = dstPts.astype(float)
+	srcPts = srcPts.astype(float)
+	
 	h, mask = cv2.findHomography(srcPts, dstPts, cv2.RANSAC, 5.0)
 
 	# print(h)
@@ -485,16 +488,16 @@ def calcHomographyCourt(clip):
 
 def main():
 	global mouseCoords
-	# clip = PANORAMA_ROI['clip1']
-	# show_frame_in_matplot(clip['panorama_filename'], 300)
+	# clip = PANORAMA_ROI['clip3']
+	# show_frame_in_matplot(clip['panorama_filename'], 50)
 
-	h = calcHomographyCourt('clip1')
-	# print("Get ready to track green1")
-	# time.sleep(2)
-	# mouseMotionTracking('clip3', 'green1', use_final=False)
-	# print("Get ready to track green2")
-	# time.sleep(2)
-	# mouseMotionTracking('clip3', 'green2', use_final=False)
+	h = calcHomographyCourt('clip3')
+	print("Get ready to track green1")
+	time.sleep(2)
+	mouseMotionTracking('clip3', 'green1', use_final=False)
+	print("Get ready to track green2")
+	time.sleep(2)
+	mouseMotionTracking('clip3', 'green2', use_final=False)
 	# print("Get ready to track white1")
 	# time.sleep(2)
 	# mouseMotionTracking('clip3', 'white1', use_final=False)
