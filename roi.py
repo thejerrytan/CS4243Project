@@ -14,7 +14,8 @@ PLANE_COORDS = {
 	'vcourt_left_mid' : (-400,0),
 	'vcourt_right_mid' : (400,0),
 	'vcourt_bot_mid' : (0,800),
-	'vcourt_top_mid' : (0,-800)
+	'vcourt_top_mid' : (0,-800),
+	'vcourt_exp1' : (300, -100)
 }
 
 PANORAMA_ROI = {
@@ -344,7 +345,7 @@ PANORAMA_ROI = {
 		'end_frame'      : 380,
 		'original_shape' : (350, 636),
 		'panorama_shape' : (700, 350),
-		'ref_frame'      : 50,
+		'ref_frame'      : 75,
 		'pt1' : {
 			'x' : 600,
 			'y' : 100,
@@ -390,14 +391,15 @@ PANORAMA_ROI = {
 		'player_ball_tracking_end_frame' : 378,
 		'player_ball_tracking_start_frame' : 0,
 		'player_ball_position_filename' : './clip6_ball_position.txt',
-		'vcourt_points' : ['vcourt_bottom_left','vcourt_bottom_right','vcourt_net_left','vcourt_net_right','vcourt_center'],
+		'vcourt_points' : ['vcourt_bottom_right', 'vcourt_net_right','vcourt_net_center','vcourt_exp1'],
 		'vcourt_bottom_left'  : (-1, -1),
-		'vcourt_bottom_right' : (688, 238),
+		'vcourt_bottom_right' : (695, 242),
 		'vcourt_net_left'     : (-1, -1),
-		'vcourt_net_right'    : (341, 221),
-		'vcourt_center'       : (341, 308),
+		'vcourt_net_right'    : (333, 234),
+		'vcourt_center'       : (330, 304),
 		'vcourt_top_left'     : (-1, -1),
-		'vcourt_top_right'    : (-1, -1)
+		'vcourt_top_right'    : (-1, -1),
+		'vcourt_exp1' 	      : (288, 250)
 	},
 	'clip7' : {
 		'filename'          : './beachVolleyball/beachVolleyball7.mov',
