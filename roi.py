@@ -3,6 +3,20 @@ import math
 import numpy.linalg as la
 import cv2
 
+PLANE_COORDS = {
+	'vcourt_center' : (0,0),
+	'vcourt_top_left' : (-400,-800),
+	'vcourt_top_right' : (400,-800),
+	'vcourt_bottom_left': (-400,800),
+	'vcourt_bottom_right' : (400,800),
+	'vcourt_net_left' : (-500,0),
+	'vcourt_net_right' : (500,0),
+	'vcourt_left_mid' : (-400,0),
+	'vcourt_right_mid' : (400,0),
+	'vcourt_bot_mid' : (0,800),
+	'vcourt_top_mid' : (0,-800)
+}
+
 PANORAMA_ROI = {
 	'clip1' : {
 		'filename'       : './beachVolleyball/beachVolleyball1.mov',
@@ -58,13 +72,15 @@ PANORAMA_ROI = {
 		'player_ball_tracking_end_frame' : 629,
 		'player_ball_tracking_start_frame' : 0,
 		'player_ball_position_filename' : './clip1_ball_position.txt',
-		'vcourt_bottom_left'  : (-1, -1),
+		'vcourt_points' : ['vcourt_bottom_left','vcourt_bottom_right','vcourt_net_left','vcourt_net_right','vcourt_center'],
+		'vcourt_bottom_left'  : (191,362),
 		'vcourt_bottom_right' : (472, 159),
-		'vcourt_net_left'     : (63, 153),
+		'vcourt_net_left'     : (-50, 40), # HACKED POINT!!!
 		'vcourt_net_right'    : (315, 96),
-		'vcourt_center'       : (224, 115),
+		'vcourt_center'       : (209, 117),
 		'vcourt_top_left'     : (-1, -1),
-		'vcourt_top_right'    : (-1, -1)
+		'vcourt_top_right'    : (-1, -1),
+		'plane_homography_filename' : './clip1_plane_homography.txt'
 	},
 	'clip2' : {
 		'filename'       : './beachVolleyball/beachVolleyball2.mov',
@@ -120,6 +136,7 @@ PANORAMA_ROI = {
 		'player_ball_tracking_end_frame' : 549,
 		'player_ball_tracking_start_frame' : 0,
 		'player_ball_position_filename' : './clip2_ball_position.txt',
+		'vcourt_points' : ['vcourt_bottom_left','vcourt_bottom_right','vcourt_net_left','vcourt_net_right','vcourt_center'],
 		'vcourt_bottom_left'  : (-1, -1),
 		'vcourt_bottom_right' : (-1, -1),
 		'vcourt_net_left'     : (176, 153),
@@ -136,7 +153,7 @@ PANORAMA_ROI = {
 		'end_frame'      : 350,
 		'original_shape' : (294, 636),
 		'panorama_shape' : (700, 300),
-		'ref_frame'      : 100,
+		'ref_frame'      : 50,
 		'pt1' : {
 			'x' : 120,
 			'y' : 150,
@@ -156,7 +173,7 @@ PANORAMA_ROI = {
 			'w' : 30
 		},
 		'pt4' : {
-			'x' : 120,
+			'x' : 280,
 			'y' : 250,
 			'h' : 20,
 			'w' : 20
@@ -182,13 +199,15 @@ PANORAMA_ROI = {
 		'player_ball_tracking_end_frame' : 349,
 		'player_ball_tracking_start_frame' : 0,
 		'player_ball_position_filename' : './clip3_ball_position.txt',
-		'vcourt_bottom_left'  : (-1, -1),
-		'vcourt_bottom_right' : (-1, -1),
+		'vcourt_points' : ['vcourt_bottom_left','vcourt_bottom_right','vcourt_net_left','vcourt_net_right','vcourt_center'],
+		'vcourt_bottom_left'  : (685, 305),
+		'vcourt_bottom_right' : (690, 190),
 		'vcourt_net_left'     : (-1, -1),
-		'vcourt_net_right'    : (372, 180),
+		'vcourt_net_right'    : (322, 180),
 		'vcourt_center'       : (-1, -1),
 		'vcourt_top_left'     : (-1, -1),
-		'vcourt_top_right'    : (45, 190)
+		'vcourt_top_right'    : (48, 190),
+		'vcourt_right_mid'    : (370, 190)
 	},
 	'clip4' : {
 		'filename'       : './beachVolleyball/beachVolleyball4.mov',
@@ -244,6 +263,7 @@ PANORAMA_ROI = {
 		'player_ball_tracking_end_frame' : 999,
 		'player_ball_tracking_start_frame' : 0,
 		'player_ball_position_filename' : './clip4_ball_position.txt',
+		'vcourt_points' : ['vcourt_bottom_left','vcourt_bottom_right','vcourt_net_left','vcourt_net_right','vcourt_center'],
 		'vcourt_bottom_left'  : (-1, -1),
 		'vcourt_bottom_right' : (-1, -1),
 		'vcourt_net_left'     : (-1, -1),
@@ -306,6 +326,7 @@ PANORAMA_ROI = {
 		'player_ball_tracking_end_frame' : 999,
 		'player_ball_tracking_start_frame' : 0,
 		'player_ball_position_filename' : './clip5_ball_position.txt',
+		'vcourt_points' : ['vcourt_bottom_left','vcourt_bottom_right','vcourt_net_left','vcourt_net_right','vcourt_center'],
 		'vcourt_bottom_left'  : (-1, -1),
 		'vcourt_bottom_right' : (671, 326),
 		'vcourt_net_left'     : (80, 197),
@@ -369,6 +390,7 @@ PANORAMA_ROI = {
 		'player_ball_tracking_end_frame' : 378,
 		'player_ball_tracking_start_frame' : 0,
 		'player_ball_position_filename' : './clip6_ball_position.txt',
+		'vcourt_points' : ['vcourt_bottom_left','vcourt_bottom_right','vcourt_net_left','vcourt_net_right','vcourt_center'],
 		'vcourt_bottom_left'  : (-1, -1),
 		'vcourt_bottom_right' : (688, 238),
 		'vcourt_net_left'     : (-1, -1),
@@ -431,6 +453,7 @@ PANORAMA_ROI = {
 		'player_ball_tracking_end_frame' : 999,
 		'player_ball_tracking_start_frame' : 0,
 		'player_ball_position_filename' : './clip7_ball_position.txt',
+		'vcourt_points' : ['vcourt_bottom_left','vcourt_bottom_right','vcourt_net_left','vcourt_net_right','vcourt_center'],
 		'vcourt_bottom_left'  : (-1, -1),
 		'vcourt_bottom_right' : (612, 220),
 		'vcourt_net_left'     : (-1, -1),
@@ -449,6 +472,9 @@ PANORAMA_BLEND = {
 
 def motion_tracking(filename, ROI, start=0, end=None, maxCorners=3, skip=None):
 	""" 
+		Acknowledge : Lucas-Kanade optical flow tracker - Code taken from http://docs.opencv.org/trunk/d7/d8b/tutorial_py_lucas_kanade.html
+		with some modifications for our own use
+
 		Uses OpenCV to extract good corners and track the movement of those corners.
 		ROI is a mask to extract only features from this part of the image
 		start from frame no., with 1st frame in video as frame 0

@@ -162,7 +162,7 @@ def calc_homography(pts, cam):
 	# Normalize H
 	H = np.divide(H, H[2,2])
 	if cam.shape[1] != 3:
-		cam = np.hstack((cam, 1))
+		cam = np.hstack((cam, np.ones((5,1))))
 	for i in range(0, pts.shape[0]):
 		if not check_homography(pts[i], cam[i], H):
 			print("Error! Homography matrix is not a good solution")
@@ -170,6 +170,8 @@ def calc_homography(pts, cam):
 
 def check_homography(cam1, cam2, H):
 	""" Using the equation cam1 = H * cam2, check if H * cam2 gives back cam1 """
+	print(cam1)
+	print(cam2)
 	cam2 = cam2.T
 	a = np.array(np.dot(H, cam2)).reshape((3,))
 	a = a / a[2]
