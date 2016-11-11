@@ -8,7 +8,14 @@ import subprocess
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
-import cv
+
+from roi import *
+version_flag = 2
+if is_cv2():
+    version_flag = 2
+    import cv2.cv as cv
+elif is_cv3():
+    version_flag = 3
 
 WINDOW_SIZE = 10
 
@@ -76,8 +83,11 @@ def plot_topdown(clip):
 
     if not os.path.exists("./topdown/clip%d" % clip):
         os.makedirs("./topdown/clip%d" % clip)
-
-    fourcc = cv.CV_FOURCC('m', 'p', '4', 'v')
+    
+    if version_flag == 2:
+        fourcc = cv.CV_FOURCC('m', 'p', '4', 'v')
+    else:
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     writer = None
 
     for i in range(0, frames):

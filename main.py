@@ -6,7 +6,6 @@ import cv2
 from homography import *
 from corner import *
 from roi import *
-# from imutils.video import VideoStream
 import time
 np.seterr(divide='ignore', invalid='ignore')
 np.set_printoptions(threshold=np.inf)
