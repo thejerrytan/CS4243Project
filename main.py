@@ -321,54 +321,6 @@ def colorBackground(img, color):
 				img[v,u,:] = np.array([color[0],color[1],color[2]], dtype='uint8')
 	return img
 
-def subtractBackground(filename):
-	cap  = cv2.VideoCapture(filename)
-	# fgbg = cv2.bgsegm.createBackgroundSubtractorMOG()
-	fgbg = cv2.createBackgroundSubtractorMOG2(varThreshold=1000)
-
-	while(1):
-		ret, frame = cap.read()
-		fgmask = fgbg.apply(frame)
-		cv2.imshow('frame', fgmask)
-		k = cv2.waitKey(30) & 0xff
-		if k == 27:
- 			break
-	cap.release()
-	cv2.destroyAllWindows()
-
-def addPlayersToBackground(filename):
-	PAN_WIDTH  = 630
-	PAN_HEIGHT = 300
-	cap  = cv2.VideoCapture(filename)
-	bg   = cv2.imread(CLIP1_PAN_BG,  cv2.IMREAD_COLOR)
-	# Median Filtering
-	# bg   = cv2.medianBlur(bg, 3)
-	# cv2.imshow("Median Filtering", bg)
-	
-	# Initialize resources
-	fgbg = cv2.createBackgroundSubtractorMOG2(varThreshold=50, detectShadows=False)
-	fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-	writer = cv2.VideoWriter(filename.split('/')[1].split('.')[0] + "_with_players.mov", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
-	ROI_mask = np.zeros((PAN_HEIGHT, PAN_WIDTH), dtype='uint8')
-	ROI_mask[50:155, 70:480] = 255
-	ROI_mask[100:250, 250:470] = 255
-	while(1):
-		ret, frame = cap.read()
-		fgmask = fgbg.apply(frame)
-		fgmask = cv2.bitwise_and(ROI_mask, ROI_mask, mask=fgmask)
-		bgmask = cv2.bitwise_not(fgmask)
-		foreground = cv2.bitwise_and(frame, frame, mask=fgmask)
-		background = cv2.bitwise_and(bg, bg, mask=bgmask)
-		combined = cv2.add(foreground, background)
-		cv2.imshow('frame', combined)
-		writer.write(combined)
-		k = cv2.waitKey(30) & 0xff
-		if k == 27:
- 			break
-	cap.release()
-	writer.release()
-	cv2.destroyAllWindows()
-
 mouseCoords = np.zeros((1000,2))
 count = 0
 def registerCoord(event, x, y, flags, param):
@@ -430,12 +382,12 @@ def mouseMotionTracking(clip, obj, use_final=True):
 	mouseCoords = fillZeros(mouseCoords)
 
 	# Calc Homography
-	h = calcHomographyCourt(clip)
+	# h = calcHomographyCourt(clip)
 
 	# Transform to plane coordinates
-	for i in range(0, mouseCoords.shape[0]):
-		result = get_plane_coordinates(h, np.hstack((mouseCoords[i,:],1)))[0,0:2]
-		mouseCoords[i,:] = result
+	# for i in range(0, mouseCoords.shape[0]):
+	# 	result = get_plane_coordinates(h, np.hstack((mouseCoords[i,:],1)))[0,0:2]
+	# 	mouseCoords[i,:] = result
 
 	filename_key = 'player_%s_position_filename' % obj
 	tracking_end_frame_key = 'player_%s_tracking_end_frame' % obj
@@ -486,18 +438,33 @@ def calcHomographyCourt(clip):
 
 	return h
 
+def convertImageToPlane(clip, obj):
+	clip_num = int(clip[-1])
+	if obj == 'ball':
+		img = np.loadtxt('./clip%d_ball_position.txt' % (clip_num))
+	else:
+		img = np.loadtxt('./clip%d_player_%s_position.txt' % (clip_num, obj))
+	h = calcHomographyCourt(clip)
+
+	# Transform to plane coordinates
+	for i in range(0, img.shape[0]):
+		result = get_plane_coordinates(h, np.hstack((img[i,:],1)))[0,0:2]
+		img[i,:] = result
+
+	filename_key = 'player_%s_court_position_filename' % obj
+	np.savetxt(PANORAMA_ROI[clip][filename_key], img, fmt='%1.4f')
+
 def main():
 	global mouseCoords
 	# clip = PANORAMA_ROI['clip3']
 	# show_frame_in_matplot(clip['panorama_filename'], 50)
 
-	h = calcHomographyCourt('clip3')
-	print("Get ready to track green1")
-	time.sleep(2)
-	mouseMotionTracking('clip3', 'green1', use_final=False)
-	print("Get ready to track green2")
-	time.sleep(2)
-	mouseMotionTracking('clip3', 'green2', use_final=False)
+	# print("Get ready to track green1")
+	# time.sleep(2)
+	# mouseMotionTracking('clip3', 'green1', use_final=False)
+	# print("Get ready to track green2")
+	# time.sleep(2)
+	# mouseMotionTracking('clip3', 'green2', use_final=False)
 	# print("Get ready to track white1")
 	# time.sleep(2)
 	# mouseMotionTracking('clip3', 'white1', use_final=False)
@@ -506,14 +473,18 @@ def main():
 	# mouseMotionTracking('clip3', 'white2', use_final=False)
 	# print("Get ready to track ball")
 	# time.sleep(2)
-	# mouseMotionTracking('clip3', 'ball', use_final=False)
+	# mouseMotionTracking('clip6', 'ball', use_final=False)
 
 	# constructPanorama('clip2')
 	# bg = get_bg('clip6', repeat=[(300,400),(500,600)])
 	# addPlayersToBackground(CLIP1_PAN)
 	# mergePanWithBg('clip6')
 	# subtractBackground(CLIP1_PAN)
-
+	# convertImageToPlane('clip6', 'red1')
+	# convertImageToPlane('clip6', 'red2')
+	# convertImageToPlane('clip6', 'white1')
+	# convertImageToPlane('clip6', 'white2')
+	convertImageToPlane('clip6', 'ball')
 
 if __name__ == "__main__":
 	main()

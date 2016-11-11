@@ -81,7 +81,12 @@ PANORAMA_ROI = {
 		'vcourt_center'       : (209, 117),
 		'vcourt_top_left'     : (-1, -1),
 		'vcourt_top_right'    : (-1, -1),
-		'plane_homography_filename' : './clip1_plane_homography.txt'
+		'plane_homography_filename' : './clip1_plane_homography.txt',
+		'player_green1_court_position_filename' : './clip1_player_green1_court_position.txt',
+		'player_green2_court_position_filename' : './clip1_player_green2_court_position.txt',
+		'player_white1_court_position_filename' : './clip1_player_white1_court_position.txt',
+		'player_white2_court_position_filename' : './clip1_player_white2_court_position.txt',
+		'player_ball_court_position_filename' : './clip1_ball_court_position.txt'
 	},
 	'clip2' : {
 		'filename'       : './beachVolleyball/beachVolleyball2.mov',
@@ -145,7 +150,12 @@ PANORAMA_ROI = {
 		'vcourt_center'       : (-1, -1),
 		'vcourt_top_left'     : (-1, -1),
 		'vcourt_top_right'    : (545, 135),
-		'plane_homography_filename' : './clip2_plane_homography.txt'
+		'plane_homography_filename' : './clip2_plane_homography.txt',
+		'player_green1_court_position_filename' : './clip2_player_green1_court_position.txt',
+		'player_green2_court_position_filename' : './clip2_player_green2_court_position.txt',
+		'player_white1_court_position_filename' : './clip2_player_white1_court_position.txt',
+		'player_white2_court_position_filename' : './clip2_player_white2_court_position.txt',
+		'player_ball_court_position_filename' : './clip2_ball_court_position.txt'
 	},
 	'clip3' : {
 		'filename'       : './beachVolleyball/beachVolleyball3.mov',
@@ -210,7 +220,12 @@ PANORAMA_ROI = {
 		'vcourt_top_left'     : (-1, -1),
 		'vcourt_top_right'    : (-50, 190),
 		'vcourt_right_mid'    : (317, 190),
-		'plane_homography_filename' : './clip3_plane_homography.txt'
+		'plane_homography_filename' : './clip3_plane_homography.txt',
+		'player_green1_court_position_filename' : './clip3_player_green1_court_position.txt',
+		'player_green2_court_position_filename' : './clip3_player_green2_court_position.txt',
+		'player_white1_court_position_filename' : './clip3_player_white1_court_position.txt',
+		'player_white2_court_position_filename' : './clip3_player_white2_court_position.txt',
+		'player_ball_court_position_filename' : './clip3_ball_court_position.txt'
 	},
 	'clip4' : {
 		'filename'       : './beachVolleyball/beachVolleyball4.mov',
@@ -274,7 +289,12 @@ PANORAMA_ROI = {
 		'vcourt_center'       : (-1, -1),
 		'vcourt_top_left'     : (-1, -1),
 		'vcourt_top_right'    : (-1, -1),
-		'plane_homography_filename' : './clip4_plane_homography.txt'
+		'plane_homography_filename' : './clip4_plane_homography.txt',
+		'player_green1_court_position_filename' : './clip4_player_green1_court_position.txt',
+		'player_green2_court_position_filename' : './clip4_player_green2_court_position.txt',
+		'player_white1_court_position_filename' : './clip4_player_white1_court_position.txt',
+		'player_white2_court_position_filename' : './clip4_player_white2_court_position.txt',
+		'player_ball_court_position_filename' : './clip4_ball_court_position.txt'
 	},
 	'clip5' : {
 		'filename'       : './beachVolleyball/beachVolleyball5.mov',
@@ -338,7 +358,12 @@ PANORAMA_ROI = {
 		'vcourt_center'       : (253, 192),
 		'vcourt_top_left'     : (-1, -1),
 		'vcourt_top_right'    : (-1, -1),
-		'plane_homography_filename' : './clip5_plane_homography.txt'
+		'plane_homography_filename' : './clip5_plane_homography.txt',
+		'player_red1_court_position_filename' : './clip5_player_red1_court_position.txt',
+		'player_red2_court_position_filename' : './clip5_player_red2_court_position.txt',
+		'player_white1_court_position_filename' : './clip5_player_white1_court_position.txt',
+		'player_white2_court_position_filename' : './clip5_player_white2_court_position.txt',
+		'player_ball_court_position_filename' : './clip5_ball_court_position.txt'
 	},
 	'clip6' : {
 		'filename'       : './beachVolleyball/beachVolleyball6.mov',
@@ -395,7 +420,7 @@ PANORAMA_ROI = {
 		'player_ball_tracking_end_frame' : 378,
 		'player_ball_tracking_start_frame' : 0,
 		'player_ball_position_filename' : './clip6_ball_position.txt',
-        'vcourt_points' : ['vcourt_bottom_right', 'vcourt_net_right','vcourt_net_center','vcourt_exp1'],
+        'vcourt_points' : ['vcourt_bottom_right', 'vcourt_net_right','vcourt_center','vcourt_exp1'],
         'vcourt_bottom_left'  : (-1, -1),
         'vcourt_bottom_right' : (695, 242),
         'vcourt_net_left'     : (-1, -1),
@@ -403,8 +428,13 @@ PANORAMA_ROI = {
         'vcourt_center'       : (330, 304),
         'vcourt_top_left'     : (-1, -1),
         'vcourt_top_right'    : (-1, -1),
-        'vcourt_exp1' 	      : (288, 250)
-		'plane_homography_filename' : './clip6_plane_homography.txt'
+        'vcourt_exp1' 	      : (288, 250),
+		'plane_homography_filename' : './clip6_plane_homography.txt',
+		'player_red1_court_position_filename' : './clip6_player_red1_court_position.txt',
+		'player_red2_court_position_filename' : './clip6_player_red2_court_position.txt',
+		'player_white1_court_position_filename' : './clip6_player_white1_court_position.txt',
+		'player_white2_court_position_filename' : './clip6_player_white2_court_position.txt',
+		'player_ball_court_position_filename' : './clip6_ball_court_position.txt'
 	},
 	'clip7' : {
 		'filename'          : './beachVolleyball/beachVolleyball7.mov',
@@ -468,7 +498,12 @@ PANORAMA_ROI = {
 		'vcourt_center'       : (259, 278),
 		'vcourt_top_left'     : (-1, -1),
 		'vcourt_top_right'    : (-1, -1),
-		'plane_homography_filename' : './clip7_plane_homography.txt'
+		'plane_homography_filename' : './clip7_plane_homography.txt',
+		'player_red1_court_position_filename' : './clip7_player_red1_court_position.txt',
+		'player_red2_court_position_filename' : './clip7_player_red2_court_position.txt',
+		'player_white1_court_position_filename' : './clip7_player_white1_court_position.txt',
+		'player_white2_court_position_filename' : './clip7_player_white2_court_position.txt',
+		'player_ball_court_position_filename' : './clip7_ball_court_position.txt'
 	}
 }
 

@@ -8,12 +8,23 @@ WINDOW_SIZE = 10
 
 
 def plot_topdown(clip):
+    if clip in [1,2,3,4]:
+        p1 = 'green1'
+        p2 = 'green2'
+        p3 = 'white1'
+        p4 = 'white2'
+    else:
+        p1 = 'red1'
+        p2 = 'red2'
+        p3 = 'white1'
+        p4 = 'white2'
+
     cap = cv2.VideoCapture("./beachVolleyball/beachVolleyball%d.mov" % clip)
-    player1 = np.loadtxt('./clip%d_player_green1_position.txt' % (clip))
-    player2 = np.loadtxt('./clip%d_player_green2_position.txt' % (clip))
-    player3 = np.loadtxt('./clip%d_player_white1_position.txt' % (clip))
-    player4 = np.loadtxt('./clip%d_player_white2_position.txt' % (clip))
-    ball = np.loadtxt('./clip%d_ball_position.txt' % (clip))
+    player1 = np.loadtxt('./clip%d_player_%s_court_position.txt' % (clip, p1))
+    player2 = np.loadtxt('./clip%d_player_%s_court_position.txt' % (clip, p2))
+    player3 = np.loadtxt('./clip%d_player_%s_court_position.txt' % (clip, p3))
+    player4 = np.loadtxt('./clip%d_player_%s_court_position.txt' % (clip, p4))
+    ball = np.loadtxt('./clip%d_ball_court_position.txt' % (clip))
     interpolate_ball(ball)
 
     frames = len(player1)
@@ -112,4 +123,4 @@ def smooth_position_and_count_jump(arr):
 
 
 if __name__ == '__main__':
-    plot_topdown(3)
+    plot_topdown(6)
