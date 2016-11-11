@@ -6,8 +6,11 @@ import cv2
 from homography import *
 from corner import *
 from roi import *
-# from imutils.video import VideoStream
+from bg import *
+from plot import *
 import time
+
+# from imutils.video import VideoStream
 np.seterr(divide='ignore', invalid='ignore')
 np.set_printoptions(threshold=np.inf)
 
@@ -86,7 +89,10 @@ def get_bg(clip, repeat=None):
 	return normImg
 
 def show_frame_in_matplot(filename, num, roi=None):
-	""" Show frame number from filename in matplot"""
+	""" 
+		Helper function to choose proper Region of Interest for feature tracking
+		Show frame number from filename in matplot, if roi is given, draw a bounding rectangle before showing
+	"""
 	cap = cv2.VideoCapture(filename)
 	count = 0
 	while(cap.isOpened() and count <= num):
@@ -97,10 +103,6 @@ def show_frame_in_matplot(filename, num, roi=None):
 		bottom_right = (roi['x']+roi['w'], roi['y']+roi['h'])
 		frame = cv2.rectangle(frame, top_left, bottom_right, (0,0,255), 3)	
 	plt.figure()
-	# axes = plt.gca()
-	# axes.autoscale(False)
-	# axes.set_xlim(-100, 800)
-	# axes.set_ylim(-100, 400)
 	plt.imshow(frame, origin='upper')
 	plt.show()
 	cap.release()
@@ -381,14 +383,6 @@ def mouseMotionTracking(clip, obj, use_final=True):
 	# Post processing
 	mouseCoords = fillZeros(mouseCoords)
 
-	# Calc Homography
-	# h = calcHomographyCourt(clip)
-
-	# Transform to plane coordinates
-	# for i in range(0, mouseCoords.shape[0]):
-	# 	result = get_plane_coordinates(h, np.hstack((mouseCoords[i,:],1)))[0,0:2]
-	# 	mouseCoords[i,:] = result
-
 	filename_key = 'player_%s_position_filename' % obj
 	tracking_end_frame_key = 'player_%s_tracking_end_frame' % obj
 	np.savetxt(PANORAMA_ROI[clip][filename_key], mouseCoords[0:int(PANORAMA_ROI[clip][tracking_end_frame_key]),:], fmt='%1.4f')
@@ -456,35 +450,73 @@ def convertImageToPlane(clip, obj):
 
 def main():
 	global mouseCoords
-	# clip = PANORAMA_ROI['clip3']
-	# show_frame_in_matplot(clip['panorama_filename'], 50)
+	# Get Panorama by tracking 5 points on the volleyball court across all frames, 
+	# We calculate the homography between reference frame and camera in each frame
+	# Lastly, we do a perspective transformation to map all image points in each frame
+	# to image points in reference frame
+	for i in range(1, 8):
+		constructPanorama('clip%d' % i)
 
-	# print("Get ready to track green1")
-	# time.sleep(2)
-	# mouseMotionTracking('clip3', 'green1', use_final=False)
-	# print("Get ready to track green2")
-	# time.sleep(2)
-	# mouseMotionTracking('clip3', 'green2', use_final=False)
-	# print("Get ready to track white1")
-	# time.sleep(2)
-	# mouseMotionTracking('clip3', 'white1', use_final=False)
-	# print("Get ready to track white2")
-	# time.sleep(2)
-	# mouseMotionTracking('clip3', 'white2', use_final=False)
-	# print("Get ready to track ball")
-	# time.sleep(2)
-	# mouseMotionTracking('clip6', 'ball', use_final=False)
+	# We blend the background using the panorama we obtained above to get a clear background
+	# We merge the moving players in the foreground in the panorama obtained above with the background
+	for i in range(1, 8):
+		blendFrames('clip%d' % i)
+		mergePanWithBg('clip%d' % i)
+	
+	# Next we track players by playing back the panorama video and using mouse clicks to record the image
+	# coordinates of each player on the volleyball court.
+	# We track the ball by clicking only when it is in contact with players or the ground, and interpolate
+	# the ball position in between linearly. 
+	# We know by the laws of physics, if the ball is in the air, it can only travel in a straight line
+	for i in range(1, 8):
+		if i in [1,2,3,4]:
+			p1 = 'green1'
+			p2 = 'green2'
+		else:
+			p1 = 'red1'
+			p2 = 'red2'
+		p3 = 'white1'
+		p4 = 'white2'
+		print("Get ready to track %s" % p1)
+		time.sleep(2)
+		mouseMotionTracking('clip%d' % i, p1, use_final=False)
+		print("Get ready to track %s" % p2)
+		time.sleep(2)
+		mouseMotionTracking('clip%d' % i, p2, use_final=False)
+		print("Get ready to track %s" % p3)
+		time.sleep(2)
+		mouseMotionTracking('clip%d' % i, p3, use_final=False)
+		print("Get ready to track %s" % p4)
+		time.sleep(2)
+		mouseMotionTracking('clip%d' % i, p4, use_final=False)
+		print("Get ready to track ball")
+		time.sleep(2)
+		mouseMotionTracking('clip%d' % i, 'ball', use_final=False)
 
-	# constructPanorama('clip2')
-	# bg = get_bg('clip6', repeat=[(300,400),(500,600)])
-	# addPlayersToBackground(CLIP1_PAN)
-	# mergePanWithBg('clip6')
-	# subtractBackground(CLIP1_PAN)
-	# convertImageToPlane('clip6', 'red1')
-	# convertImageToPlane('clip6', 'red2')
-	# convertImageToPlane('clip6', 'white1')
-	# convertImageToPlane('clip6', 'white2')
-	convertImageToPlane('clip6', 'ball')
+	# We convert the players' image coordinates to volleyball court coordinates (center of court as origin) 
+	# using the image coordinates of 4 known points on the panorama to calculate the homography matrix
+	for i in range(1, 8):
+		if i in [1,2,3,4]:
+			p1 = 'green1'
+			p2 = 'green2'
+		else:
+			p1 = 'red1'
+			p2 = 'red2'
+		p3 = 'white1'
+		p4 = 'white2'
+		convertImageToPlane('clip%d', p1)
+		convertImageToPlane('clip%d', p2)
+		convertImageToPlane('clip%d', p3)
+		convertImageToPlane('clip%d', p4)
+		convertImageToPlane('clip%d', 'ball')
 
+	# We plot each players' court coordinates, together with the ball in a topdown view
+	# As the background is white, we choose yellow to represent the white team instead
+	# Blue represents the ball
+	for i in range(1, 8):
+		plot_topdown(i)
+
+	# Save all our output video clips into a single video file
+	
 if __name__ == "__main__":
 	main()
