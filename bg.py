@@ -1,6 +1,14 @@
 import numpy as np
 import cv2
-import cv2.cv as cv
+
+from roi import *
+version_flag = 2
+if is_cv2():
+    version_flag = 2
+    import cv2.cv as cv
+elif is_cv3():
+    version_flag = 3
+
 from roi import *
 from matplotlib import pyplot as plt
 
@@ -52,10 +60,16 @@ def isValidPoint(h, w, fh, fw, img):
 def blendFrames(clip):
     clipFileName = PANORAMA_ROI[clip]['panorama_filename']
     cap = cv2.VideoCapture(clipFileName)
-    fw = int(cap.get(cv.CV_CAP_PROP_FRAME_WIDTH))
-    fh = int(cap.get(cv.CV_CAP_PROP_FRAME_HEIGHT))
-    fps = int(cap.get(cv.CV_CAP_PROP_FPS))
-    fc = int(cap.get(cv.CV_CAP_PROP_FRAME_COUNT))
+    if version_flag == 2:
+        fw = int(cap.get(cv.CV_CAP_PROP_FRAME_WIDTH))
+        fh = int(cap.get(cv.CV_CAP_PROP_FRAME_HEIGHT))
+        fps = int(cap.get(cv.CV_CAP_PROP_FPS))
+        fc = int(cap.get(cv.CV_CAP_PROP_FRAME_COUNT))
+    else:
+        fw  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        fh  = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        fc  = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
     image = np.zeros([fh, fw, 3], float)
     count = np.zeros([fh, fw])

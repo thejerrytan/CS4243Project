@@ -267,10 +267,10 @@ def mergePanWithBg(clip):
 	cap = cv2.VideoCapture(videoFile)
 	if version_flag == 3:
 		fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-		writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
+		writer = cv2.VideoWriter(videoFile.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
 	elif version_flag == 2:
 		fourcc = cv.CV_FOURCC('m','p','4','v')
-		writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 24, (PAN_WIDTH, PAN_HEIGHT), True)
+		writer = cv2.VideoWriter(videoFile.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 24, (PAN_WIDTH, PAN_HEIGHT), True)
 	tol = 50
 	while(cap.isOpened() and count < end_frame):
 		ret, frame = cap.read()
@@ -454,14 +454,15 @@ def main():
 	# We calculate the homography between reference frame and camera in each frame
 	# Lastly, we do a perspective transformation to map all image points in each frame
 	# to image points in reference frame
-	for i in range(1, 8):
-		constructPanorama('clip%d' % i)
+	# for i in range(1, 8):
+	# 	if i not in [4]: constructPanorama('clip%d' % i)
 
 	# We blend the background using the panorama we obtained above to get a clear background
 	# We merge the moving players in the foreground in the panorama obtained above with the background
 	for i in range(1, 8):
-		blendFrames('clip%d' % i)
-		mergePanWithBg('clip%d' % i)
+		if i not in [4]:
+			blendFrames('clip%d' % i)
+			mergePanWithBg('clip%d' % i)
 	
 	# Next we track players by playing back the panorama video and using mouse clicks to record the image
 	# coordinates of each player on the volleyball court.
@@ -477,21 +478,22 @@ def main():
 			p2 = 'red2'
 		p3 = 'white1'
 		p4 = 'white2'
-		print("Get ready to track %s" % p1)
-		time.sleep(2)
-		mouseMotionTracking('clip%d' % i, p1, use_final=False)
-		print("Get ready to track %s" % p2)
-		time.sleep(2)
-		mouseMotionTracking('clip%d' % i, p2, use_final=False)
-		print("Get ready to track %s" % p3)
-		time.sleep(2)
-		mouseMotionTracking('clip%d' % i, p3, use_final=False)
-		print("Get ready to track %s" % p4)
-		time.sleep(2)
-		mouseMotionTracking('clip%d' % i, p4, use_final=False)
-		print("Get ready to track ball")
-		time.sleep(2)
-		mouseMotionTracking('clip%d' % i, 'ball', use_final=False)
+		if i in [1,2]:
+			print("Get ready to track %s" % p1)
+			time.sleep(2)
+			mouseMotionTracking('clip%d' % i, p1, use_final=False)
+			print("Get ready to track %s" % p2)
+			time.sleep(2)
+			mouseMotionTracking('clip%d' % i, p2, use_final=False)
+			print("Get ready to track %s" % p3)
+			time.sleep(2)
+			mouseMotionTracking('clip%d' % i, p3, use_final=False)
+			print("Get ready to track %s" % p4)
+			time.sleep(2)
+			mouseMotionTracking('clip%d' % i, p4, use_final=False)
+			print("Get ready to track ball")
+			time.sleep(2)
+			mouseMotionTracking('clip%d' % i, 'ball', use_final=False)
 
 	# We convert the players' image coordinates to volleyball court coordinates (center of court as origin) 
 	# using the image coordinates of 4 known points on the panorama to calculate the homography matrix
@@ -504,17 +506,19 @@ def main():
 			p2 = 'red2'
 		p3 = 'white1'
 		p4 = 'white2'
-		convertImageToPlane('clip%d', p1)
-		convertImageToPlane('clip%d', p2)
-		convertImageToPlane('clip%d', p3)
-		convertImageToPlane('clip%d', p4)
-		convertImageToPlane('clip%d', 'ball')
+		if i not in [4]:
+			convertImageToPlane('clip%d', p1)
+			convertImageToPlane('clip%d', p2)
+			convertImageToPlane('clip%d', p3)
+			convertImageToPlane('clip%d', p4)
+			convertImageToPlane('clip%d', 'ball')
 
 	# We plot each players' court coordinates, together with the ball in a topdown view
 	# As the background is white, we choose yellow to represent the white team instead
 	# Blue represents the ball
 	for i in range(1, 8):
-		plot_topdown(i)
+		if i not in [4]:
+			plot_topdown(i)
 
 	# Save all our output video clips into a single video file
 	
