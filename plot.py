@@ -16,11 +16,11 @@ def plot_topdown(clip):
     if clip >= 5:
         color1 = "red"
 
-    player1 = np.loadtxt('./clip%d_player_%s1_position.txt' % (clip, color1))
-    player2 = np.loadtxt('./clip%d_player_%s2_position.txt' % (clip, color1))
-    player3 = np.loadtxt('./clip%d_player_%s1_position.txt' % (clip, color2))
-    player4 = np.loadtxt('./clip%d_player_%s2_position.txt' % (clip, color2))
-    ball = np.loadtxt('./clip%d_ball_position.txt' % (clip))
+    player1 = np.loadtxt('./clip%d_player_%s1_court_position.txt' % (clip, color1))
+    player2 = np.loadtxt('./clip%d_player_%s2_court_position.txt' % (clip, color1))
+    player3 = np.loadtxt('./clip%d_player_%s1_court_position.txt' % (clip, color2))
+    player4 = np.loadtxt('./clip%d_player_%s2_court_position.txt' % (clip, color2))
+    ball = np.loadtxt('./clip%d_ball_court_position.txt' % (clip))
     interpolate_ball(ball)
 
     frames = len(player1)
