@@ -79,20 +79,6 @@ def get_plane_coordinates(H, img):
 		print e
 		return np.zeros((3,3))
 
-def plot_player(pts):
-	# print(np.max(pts))
-	# print(np.min(pts))
-	plt.figure()
-	plt.ion()
-	plt.xlim([-500,500])
-	plt.ylim([-1000, 1000])
-	for i in range(0, pts.shape[0]):
-		# if pts[i,2] > -0.8 and pts[i,2] < 1.2:
-		plt.scatter(pts[i,0], pts[i,1], marker='x')
-		plt.show()
-		plt.pause(0.016)
-	raw_input()
-
 def constructPanorama(clip):
 	"""
 	 	clip is one of [clip1, clip2, clip3, clip4, clip5, clip6, clip7]
@@ -164,71 +150,85 @@ def constructPanorama(clip):
 		h, mask = cv2.findHomography(srcPts, dstPts, cv2.RANSAC, 5.0)
 		H = np.vstack((H, h))
 	H = H[3:]
-	# print(H)
 
 	# Piece all [u,v] together back to reference frame
 	PAN_WIDTH = pan_shape[0]
 	PAN_HEIGHT = pan_shape[1]
 	count = 0
 	plt.figure()
-	canvas = np.full((3 * PAN_HEIGHT,3 * PAN_WIDTH,3), 0, dtype='uint8')
+	canvas = np.full((2500, 2500, 3), 0, dtype='uint8') # Declare a large canvas in advance
 	cap = cv2.VideoCapture(filename)
-	offsets = np.zeros((num_frames, 2))
-	
-	# Loop through once to get the offsets after transformation for each frame
+	xmin = 0
+	ymin = 0
+	warpedSize = np.zeros((num_frames, 2))
+	# Loop through once to get the min negative x and y so we can use it as offset later
 	while (cap.isOpened() and count < end_frame -1):
 		ret, frame = cap.read()
 		h2 = frame.shape[0]
 		w2 = frame.shape[1]
 		stacked_h = np.matrix(H[3*count:3*count+3])
-		corners = np.float32([[0,0],[0,h2],[w2,h2],[w2,0]]).reshape(-1,1,2)
-		corners_ = cv2.perspectiveTransform(corners, stacked_h)
-		offsets[count,:] = np.int32(corners_.min(axis=0).ravel() - 0.5)
-
+		srcPts  = np.float32([[0,0], [0,h2], [w2,h2], [w2,0]]).reshape(-1,1,2)
+		srcPts_ = cv2.perspectiveTransform(srcPts, stacked_h)
+		[_xmin, _ymin] = np.int32(srcPts_.min(axis=0).ravel() - 0.5)
+   		[_xmax, _ymax] = np.int32(srcPts_.max(axis=0).ravel() + 0.5)
+		warpedSize[count,:] = np.array([_xmax - _xmin, _ymax - _ymin])
+		if _xmin < xmin: xmin = _xmin
+		if _ymin < ymin: ymin = _ymin
 		if count == ref_frame:
 			ref_img = frame
 		count += 1
 	cap.release()
 
+
+	# Here we define a translation homography h that we can apply to the calculated h to shift 
+	# all points to the left and down so that all points can be seen after warpPerspective
+	X_TRANSLATION = 200
+	Y_TRANSLATION = 200
+	translation_h = np.matrix([
+			[1,0,X_TRANSLATION],
+			[0,1,Y_TRANSLATION],
+			[0,0,1]
+		])
 	try:
 		# Initialize video writer and codecs
 		cap = cv2.VideoCapture(filename)
 		count = 0
-		# kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
-		# if version_flag == 3:
-		# 	fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-		# 	writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
-		# elif version_flag == 2:
-		# 	fourcc = cv.CV_FOURCC('m','p','4','v')
-		# 	writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 24, (PAN_WIDTH, PAN_HEIGHT), True)
-		src = np.zeros((ref_img.shape[1], ref_img.shape[0]))
+		if version_flag == 3:
+			fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+			writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 60.0, (2500, 2500), True)
+		elif version_flag == 2:
+			fourcc = cv.CV_FOURCC('m','p','4','v')
+			writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 60.0, (2500, 2500), True)
+		kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2,2))
 		while(cap.isOpened() and count < end_frame-1):
+			alpha = 1 / (count+1)
 			ret, frame = cap.read()
 			h2 = frame.shape[0]
 			w2 = frame.shape[1]
 			if count < start_frame:
 				count +=1
 				continue
-			count += 1
 			print("Frame : %d " % count)
 			cv2.imshow("Original", frame)
-			src = cv2.warpPerspective(frame, stacked_h, (ref_img.shape[1], ref_img.shape[0]))
-			x_offset = offsets[count,0]
-			y_offset = offsets[count,1]
-			canvas[200+y_offset:200+y_offset+src.shape[0], 200+x_offset:200+x_offset+src.shape[1]] = src
-			# img_grey = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
-			# ret, mask = cv2.threshold(img_grey, 10, 255, cv2.THRESH_BINARY)
-			# mask_inv = cv2.bitwise_not(mask)
-			# roi = cv2.bitwise_and(src, src, mask=mask)
-			# im2 = cv2.bitwise_and(ref_img, ref_img, mask=mask_inv)
-			# roi = cv2.dilate(roi, kernel)
-			# im2 = cv2.dilate(im2, kernel)
-			# result = cv2.add(im2, roi)
-			# canvas = cv2.convertScaleAbs(canvas)
+			h = np.matrix(H[3*count:3*count+3])
+			fg = cv2.warpPerspective(frame, translation_h.dot(h), (int(warpedSize[count,0]+200), int(warpedSize[count,1]+200)))
+			bg = canvas[-ymin:-ymin+fg.shape[0], -xmin:-xmin+fg.shape[1]]
+			fg_grey = cv2.cvtColor(fg, cv2.COLOR_BGR2GRAY)
+			ret, mask = cv2.threshold(fg_grey, 30, 255, cv2.THRESH_BINARY)
+			mask_inv = cv2.bitwise_not(mask)
+			fg_masked = cv2.bitwise_and(fg, fg, mask=mask)
+			bg_masked = cv2.bitwise_and(bg, bg, mask=mask_inv)
+			bg_masked = cv2.bilateralFilter(bg_masked,9, 75,75)
+			# before_eroded = bg_masked
+			# bg_masked = cv2.erode(bg_masked, kernel)
+			# bg_masked = cv2.addWeighted(before_eroded, alpha, bg_masked, 1-alpha, 0)
+			result = cv2.add(fg_masked, bg_masked)
+			canvas[-ymin:-ymin+fg.shape[0], -xmin:-xmin+fg.shape[1]] = result
 			# Write processed frame back to video file
-			# writer.write(new_img)
+			writer.write(canvas)
 			cv2.imshow("Stitched", canvas)
-			key = cv2.waitKey(25) & 0xFF 
+			count += 1
+			key = cv2.waitKey(10) & 0xFF 
 			# if the `q` key was pressed, break from the loop
 			if key == ord("q"):
 				break
@@ -236,7 +236,7 @@ def constructPanorama(clip):
 		print e
 	finally:
 		cap.release()
-		# writer.release()
+		writer.release()
 		cv2.destroyAllWindows()
 
 def mergePanWithBg(clip):
@@ -443,7 +443,7 @@ def main():
 	# We calculate the homography between reference frame and camera in each frame
 	# Lastly, we do a perspective transformation to map all image points in each frame
 	# to image points in reference frame
-	for i in range(7, 8):
+	for i in range(1, 4):
 		constructPanorama('clip%d' % i)
 
 	# We blend the background using the panorama we obtained above to get a clear background
