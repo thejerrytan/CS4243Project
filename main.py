@@ -102,6 +102,7 @@ def constructPanorama(clip):
 	ref_frame      = PANORAMA_ROI[clip]['ref_frame']
 	start_frame    = PANORAMA_ROI[clip]['start_frame']
 	end_frame      = PANORAMA_ROI[clip]['end_frame']
+	num_frames     = end_frame - start_frame
 	filename       = PANORAMA_ROI[clip]['filename']
 	original_shape = PANORAMA_ROI[clip]['original_shape']
 	pan_shape      = PANORAMA_ROI[clip]['panorama_shape']
@@ -170,31 +171,64 @@ def constructPanorama(clip):
 	PAN_HEIGHT = pan_shape[1]
 	count = 0
 	plt.figure()
-	new_img = np.full((PAN_HEIGHT,PAN_WIDTH,3), 255, dtype='uint8')
+	canvas = np.full((3 * PAN_HEIGHT,3 * PAN_WIDTH,3), 0, dtype='uint8')
+	cap = cv2.VideoCapture(filename)
+	offsets = np.zeros((num_frames, 2))
+	
+	# Loop through once to get the offsets after transformation for each frame
+	while (cap.isOpened() and count < end_frame -1):
+		ret, frame = cap.read()
+		h2 = frame.shape[0]
+		w2 = frame.shape[1]
+		stacked_h = np.matrix(H[3*count:3*count+3])
+		corners = np.float32([[0,0],[0,h2],[w2,h2],[w2,0]]).reshape(-1,1,2)
+		corners_ = cv2.perspectiveTransform(corners, stacked_h)
+		offsets[count,:] = np.int32(corners_.min(axis=0).ravel() - 0.5)
+
+		if count == ref_frame:
+			ref_img = frame
+		count += 1
+	cap.release()
+
 	try:
 		# Initialize video writer and codecs
 		cap = cv2.VideoCapture(filename)
-		if version_flag == 3:
-			fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-			writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
-		elif version_flag == 2:
-			fourcc = cv.CV_FOURCC('m','p','4','v')
-			writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 24, (PAN_WIDTH, PAN_HEIGHT), True)
+		count = 0
+		# kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
+		# if version_flag == 3:
+		# 	fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+		# 	writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
+		# elif version_flag == 2:
+		# 	fourcc = cv.CV_FOURCC('m','p','4','v')
+		# 	writer = cv2.VideoWriter(filename.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 24, (PAN_WIDTH, PAN_HEIGHT), True)
+		src = np.zeros((ref_img.shape[1], ref_img.shape[0]))
 		while(cap.isOpened() and count < end_frame-1):
 			ret, frame = cap.read()
+			h2 = frame.shape[0]
+			w2 = frame.shape[1]
 			if count < start_frame:
 				count +=1
 				continue
 			count += 1
 			print("Frame : %d " % count)
 			cv2.imshow("Original", frame)
-			stacked_h = H[3*count:3*count+3]
-			new_img = cv2.warpPerspective(frame, stacked_h, (PAN_WIDTH, PAN_HEIGHT))
-			new_img = cv2.convertScaleAbs(new_img)
+			src = cv2.warpPerspective(frame, stacked_h, (ref_img.shape[1], ref_img.shape[0]))
+			x_offset = offsets[count,0]
+			y_offset = offsets[count,1]
+			canvas[200+y_offset:200+y_offset+src.shape[0], 200+x_offset:200+x_offset+src.shape[1]] = src
+			# img_grey = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
+			# ret, mask = cv2.threshold(img_grey, 10, 255, cv2.THRESH_BINARY)
+			# mask_inv = cv2.bitwise_not(mask)
+			# roi = cv2.bitwise_and(src, src, mask=mask)
+			# im2 = cv2.bitwise_and(ref_img, ref_img, mask=mask_inv)
+			# roi = cv2.dilate(roi, kernel)
+			# im2 = cv2.dilate(im2, kernel)
+			# result = cv2.add(im2, roi)
+			# canvas = cv2.convertScaleAbs(canvas)
 			# Write processed frame back to video file
-			writer.write(new_img)
-			cv2.imshow("Stitched", new_img)
-			key = cv2.waitKey(1) & 0xFF 
+			# writer.write(new_img)
+			cv2.imshow("Stitched", canvas)
+			key = cv2.waitKey(25) & 0xFF 
 			# if the `q` key was pressed, break from the loop
 			if key == ord("q"):
 				break
@@ -202,7 +236,7 @@ def constructPanorama(clip):
 		print e
 	finally:
 		cap.release()
-		writer.release()
+		# writer.release()
 		cv2.destroyAllWindows()
 
 def mergePanWithBg(clip):
@@ -409,69 +443,69 @@ def main():
 	# We calculate the homography between reference frame and camera in each frame
 	# Lastly, we do a perspective transformation to map all image points in each frame
 	# to image points in reference frame
-	for i in range(1, 8):
+	for i in range(7, 8):
 		constructPanorama('clip%d' % i)
 
 	# We blend the background using the panorama we obtained above to get a clear background
 	# We merge the moving players in the foreground in the panorama obtained above with the background
 	# Here we get the final panorama
-	for i in range(1, 8):
-		blendFrames('clip%d' % i)
-		mergePanWithBg('clip%d' % i)
+	# for i in range(1, 8):
+	# 	blendFrames('clip%d' % i)
+	# 	mergePanWithBg('clip%d' % i)
 	
 	# Next we track players by playing back the panorama video and using mouse clicks to record the image
 	# coordinates of each player on the volleyball court.
 	# We track the ball by clicking only when it is in contact with players or the ground, and interpolate
 	# the ball position in between linearly. 
 	# We know by the laws of physics, if the ball is in the air, it can only travel in a straight line
-	for i in range(1, 8):
-		if i in [1,2,3,4]:
-			p1 = 'green1'
-			p2 = 'green2'
-		else:
-			p1 = 'red1'
-			p2 = 'red2'
-		p3 = 'white1'
-		p4 = 'white2'
-		if i in [1,2]:
-			print("Get ready to track %s" % p1)
-			time.sleep(2)
-			mouseMotionTracking('clip%d' % i, p1, use_final=False)
-			print("Get ready to track %s" % p2)
-			time.sleep(2)
-			mouseMotionTracking('clip%d' % i, p2, use_final=False)
-			print("Get ready to track %s" % p3)
-			time.sleep(2)
-			mouseMotionTracking('clip%d' % i, p3, use_final=False)
-			print("Get ready to track %s" % p4)
-			time.sleep(2)
-			mouseMotionTracking('clip%d' % i, p4, use_final=False)
-			print("Get ready to track ball")
-			time.sleep(2)
-			mouseMotionTracking('clip%d' % i, 'ball', use_final=False)
+	# for i in range(1, 8):
+	# 	if i in [1,2,3,4]:
+	# 		p1 = 'green1'
+	# 		p2 = 'green2'
+	# 	else:
+	# 		p1 = 'red1'
+	# 		p2 = 'red2'
+	# 	p3 = 'white1'
+	# 	p4 = 'white2'
+	# 	if i in [1,2]:
+	# 		print("Get ready to track %s" % p1)
+	# 		time.sleep(2)
+	# 		mouseMotionTracking('clip%d' % i, p1, use_final=False)
+	# 		print("Get ready to track %s" % p2)
+	# 		time.sleep(2)
+	# 		mouseMotionTracking('clip%d' % i, p2, use_final=False)
+	# 		print("Get ready to track %s" % p3)
+	# 		time.sleep(2)
+	# 		mouseMotionTracking('clip%d' % i, p3, use_final=False)
+	# 		print("Get ready to track %s" % p4)
+	# 		time.sleep(2)
+	# 		mouseMotionTracking('clip%d' % i, p4, use_final=False)
+	# 		print("Get ready to track ball")
+	# 		time.sleep(2)
+	# 		mouseMotionTracking('clip%d' % i, 'ball', use_final=False)
 
 	# We convert the players' image coordinates to volleyball court coordinates (center of court as origin) 
 	# using the image coordinates of 4 known points on the panorama to calculate the homography matrix
-	for i in range(1, 8):
-		if i in [1,2,3,4]:
-			p1 = 'green1'
-			p2 = 'green2'
-		else:
-			p1 = 'red1'
-			p2 = 'red2'
-		p3 = 'white1'
-		p4 = 'white2'
-		convertImageToPlane('clip%d' % i, p1)
-		convertImageToPlane('clip%d' % i, p2)
-		convertImageToPlane('clip%d' % i, p3)
-		convertImageToPlane('clip%d' % i, p4)
-		convertImageToPlane('clip%d' % i, 'ball')
+	# for i in range(1, 8):
+	# 	if i in [1,2,3,4]:
+	# 		p1 = 'green1'
+	# 		p2 = 'green2'
+	# 	else:
+	# 		p1 = 'red1'
+	# 		p2 = 'red2'
+	# 	p3 = 'white1'
+	# 	p4 = 'white2'
+	# 	convertImageToPlane('clip%d' % i, p1)
+	# 	convertImageToPlane('clip%d' % i, p2)
+	# 	convertImageToPlane('clip%d' % i, p3)
+	# 	convertImageToPlane('clip%d' % i, p4)
+	# 	convertImageToPlane('clip%d' % i, 'ball')
 
 	# We plot each players' court coordinates, together with the ball in a topdown view
 	# As the background is white, we choose yellow to represent the white team instead
 	# Blue represents the ball
-	for i in range(1, 8):
-		plot_topdown(i)
+	# for i in range(1, 8):
+	# 	plot_topdown(i)
 	
 if __name__ == "__main__":
 	main()
