@@ -1,3 +1,10 @@
+# Team 20
+# A0097398E Lim Zi Hui
+# A0097689Y Tan Si Kai
+# A0137818W Luong Phuoc Thanh
+# A0148554X Luu Tuan Nghia 
+# A0110818M Md Ashmawi
+
 from __future__ import division # All division is floating point
 import numpy as np
 import math
@@ -36,57 +43,6 @@ elif is_cv3():
 # For purposes of feature extraction, we need to identify points that are good corners and appear consistently
 # in all frames of the clip
 # Size of olympic sized beach volleyball court - 8m wide by 16m long
-
-def get_bg(clip, repeat=None):
-	""" 
-		Get background of image by averaging method. Only works for stationary camera and background
-		Repeat = list of tuples e.g. [(start, stop), (start,stop)] where we will add all the frames from start to stop again
-	"""
-	filename = PANORAMA_ROI[clip]['panorama_filename']
-	cap = cv2.VideoCapture(filename)
-	fw  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-	fh  = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-	fps = int(cap.get(cv2.CAP_PROP_FPS))
-	fc  = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-	ret, frame = cap.read()
-	count  = 1
-	avgImg = np.zeros(frame.shape, dtype=np.float32)
-	if repeat is not None:
-		curr_repeat = repeat.pop(0)
-		curr_start = curr_repeat[0]
-		curr_end   = curr_repeat[1]
-	else:
-		curr_repeat = None
-		curr_start  = None
-		curr_end    = None
-	while(cap.isOpened() and ret):
-		alpha = 1.0 / count
-		if curr_start is not None and count >= curr_start and curr_end is not None and curr_end > count:
-			print("Double counting frame %d" % count)
-			cv2.accumulateWeighted(frame, avgImg, alpha)
-			cv2.accumulateWeighted(frame, avgImg, alpha)
-		cv2.accumulateWeighted(frame, avgImg, alpha)
-		print("Frame = " + str(count) + ", alpha = " + str(alpha))
-		cv2.imshow('background', avgImg)
-		cv2.waitKey(1)
-		normImg = cv2.convertScaleAbs(2.5 * avgImg)
-		cv2.waitKey(1)
-		cv2.imshow('normalized background', normImg)
-		ret, frame = cap.read()
-		count += 1
-		if curr_start is not None and curr_start < count and curr_end is not None and curr_end <= count:
-			if len(repeat) > 0:
-				curr_repeat = repeat.pop(0)
-				curr_start = curr_repeat[0]
-				curr_end   = curr_repeat[1]
-	print("Frame width       : %d" % fw)
-	print("Frame height      : %d" % fh)
-	print("Frames per second : %d" % fps)
-	print("Frame count       : %d" % fc)
-	cv2.imwrite('.' + filename.split('.')[1] + '_bg.jpg', normImg)
-	cap.release()
-	cv2.destroyAllWindows()
-	return normImg
 
 def show_frame_in_matplot(filename, num, roi=None):
 	""" 
@@ -235,8 +191,6 @@ def constructPanorama(clip):
 			stacked_h = H[3*count:3*count+3]
 			new_img = cv2.warpPerspective(frame, stacked_h, (PAN_WIDTH, PAN_HEIGHT))
 			new_img = cv2.convertScaleAbs(new_img)
-			# new_img = extendBorder(new_img)rgb(235,221,192)
-			# new_img = colorBackground(new_img, (192,221,235)) # Sand color
 			# Write processed frame back to video file
 			writer.write(new_img)
 			cv2.imshow("Stitched", new_img)
@@ -264,15 +218,16 @@ def mergePanWithBg(clip):
 	count = 0
 	bg = cv2.imread(PANORAMA_ROI[clip]['panorama_bg_filename'], cv2.IMREAD_COLOR)
 	videoFile = PANORAMA_ROI[clip]['panorama_filename']
+	outfile =  PANORAMA_ROI[clip]['panorama_final_filename']
 	cap = cv2.VideoCapture(videoFile)
 	if version_flag == 3:
 		fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-		writer = cv2.VideoWriter(videoFile.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
+		writer = cv2.VideoWriter(outfile, fourcc, 60.0, (PAN_WIDTH, PAN_HEIGHT), True)
 	elif version_flag == 2:
 		fourcc = cv.CV_FOURCC('m','p','4','v')
-		writer = cv2.VideoWriter(videoFile.split('/')[2].split('.')[0] + "_panorama.mov", fourcc, 24, (PAN_WIDTH, PAN_HEIGHT), True)
+		writer = cv2.VideoWriter(outfile, fourcc, 24, (PAN_WIDTH, PAN_HEIGHT), True)
 	tol = 50
-	while(cap.isOpened() and count < end_frame):
+	while(cap.isOpened() and count < end_frame-1):
 		ret, frame = cap.read()
 		if count < start_frame:
 			count += 1
@@ -454,15 +409,15 @@ def main():
 	# We calculate the homography between reference frame and camera in each frame
 	# Lastly, we do a perspective transformation to map all image points in each frame
 	# to image points in reference frame
-	# for i in range(1, 8):
-	# 	if i not in [4]: constructPanorama('clip%d' % i)
+	for i in range(1, 8):
+		constructPanorama('clip%d' % i)
 
 	# We blend the background using the panorama we obtained above to get a clear background
 	# We merge the moving players in the foreground in the panorama obtained above with the background
+	# Here we get the final panorama
 	for i in range(1, 8):
-		if i not in [4]:
-			blendFrames('clip%d' % i)
-			mergePanWithBg('clip%d' % i)
+		blendFrames('clip%d' % i)
+		mergePanWithBg('clip%d' % i)
 	
 	# Next we track players by playing back the panorama video and using mouse clicks to record the image
 	# coordinates of each player on the volleyball court.
@@ -506,21 +461,17 @@ def main():
 			p2 = 'red2'
 		p3 = 'white1'
 		p4 = 'white2'
-		if i not in [4]:
-			convertImageToPlane('clip%d', p1)
-			convertImageToPlane('clip%d', p2)
-			convertImageToPlane('clip%d', p3)
-			convertImageToPlane('clip%d', p4)
-			convertImageToPlane('clip%d', 'ball')
+		convertImageToPlane('clip%d' % i, p1)
+		convertImageToPlane('clip%d' % i, p2)
+		convertImageToPlane('clip%d' % i, p3)
+		convertImageToPlane('clip%d' % i, p4)
+		convertImageToPlane('clip%d' % i, 'ball')
 
 	# We plot each players' court coordinates, together with the ball in a topdown view
 	# As the background is white, we choose yellow to represent the white team instead
 	# Blue represents the ball
 	for i in range(1, 8):
-		if i not in [4]:
-			plot_topdown(i)
-
-	# Save all our output video clips into a single video file
+		plot_topdown(i)
 	
 if __name__ == "__main__":
 	main()
