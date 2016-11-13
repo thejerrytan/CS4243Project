@@ -403,6 +403,75 @@ def convertImageToPlane(clip, obj):
 	filename_key = 'player_%s_court_position_filename' % obj
 	np.savetxt(PANORAMA_ROI[clip][filename_key], img, fmt='%1.4f')
 
+def outputFinalSubmission():
+	for i in range(6, 7):
+		count = 0
+		clip = PANORAMA_ROI['clip%d' % i]
+		start_frame = clip['start_frame']
+		end_frame = clip['end_frame']
+		pan_filename = clip['final_submission_panorama']
+		topdown_filename = clip['final_submission_topdown']
+		orig_filename = clip['filename']
+		stats_filename = clip['final_submission_statistics']
+		out_filename = clip['final_output']
+		out_width = 1420
+		out_height = 700
+		canvas = np.full((out_height, out_width, 3), 255, dtype='uint8')
+		start_orig_x = 20
+		start_orig_y = 20
+		start_top_x  = 20
+		start_top_y  = 400
+		start_pan_x  = start_orig_x + 650 + 40
+		start_pan_y  = start_orig_y
+		start_stats_x= start_pan_x
+		start_stats_y= start_top_y
+
+		capOriginal = cv2.VideoCapture(orig_filename)
+		capPan = cv2.VideoCapture(pan_filename)
+		capTop = cv2.VideoCapture(topdown_filename)
+		frame_stats = cv2.imread(stats_filename, cv2.IMREAD_COLOR)
+		if version_flag == 3:
+			fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+			writer = cv2.VideoWriter(out_filename, fourcc, 60.0, (out_width, out_height), True)
+		elif version_flag == 2:
+			fourcc = cv.CV_FOURCC('m','p','4','v')
+			writer = cv2.VideoWriter(out_filename, fourcc, 60.0, (out_width, out_height), True)
+		while(capOriginal.isOpened() and count < end_frame-1):	
+			ret_orig, frame_orig = capOriginal.read()
+			if count < start_frame:
+				print("skipping frame %d" % count)
+				count += 1
+				continue
+			ret_pan, frame_pan = capPan.read()
+			ret_top, frame_top = capTop.read()
+			frame_top = cv2.resize(frame_top, None,fx=0.5, fy=0.5, interpolation = cv2.INTER_LINEAR)
+
+
+			# Clear canvas
+			canvas = np.full((out_height, out_width, 3), 255, dtype='uint8')
+			
+			# Add in original video
+			canvas[start_orig_y:start_orig_y+frame_orig.shape[0], start_orig_x:start_orig_x+frame_orig.shape[1]] = frame_orig
+
+			# Add in topdown view
+			canvas[start_top_y:start_top_y+frame_top.shape[0], start_top_x:start_top_x+frame_top.shape[1]] = frame_top
+
+			# Add in panorama view
+			canvas[start_pan_y:start_pan_y+frame_pan.shape[0], start_pan_x:start_pan_x+frame_pan.shape[1]] = frame_pan
+
+			# Add in statistics
+			canvas[start_stats_y:start_stats_y+frame_stats.shape[0], start_stats_x:start_stats_x+frame_stats.shape[1]] = frame_stats
+			# Show preview
+			cv2.imshow("Final output", canvas)
+			# Write to file
+			writer.write(canvas)
+			cv2.waitKey(1)
+		capOriginal.release()
+		capPan.release()
+		capTop.release()
+		writer.release()
+		cv2.destroyAllWindows()
+
 def main():
 	global mouseCoords
 	# show_frame_in_matplot(PANORAMA_ROI['clip4']['filename'], 100, roi=PANORAMA_ROI['clip4']['pt5'])
@@ -452,26 +521,29 @@ def main():
 
 	# We convert the players' image coordinates to volleyball court coordinates (center of court as origin) 
 	# using the image coordinates of 4 known points on the panorama to calculate the homography matrix
-	for i in range(2, 3):
-		if i in [1,2,3,4]:
-			p1 = 'green1'
-			p2 = 'green2'
-		else:
-			p1 = 'red1'
-			p2 = 'red2'
-		p3 = 'white1'
-		p4 = 'white2'
-		convertImageToPlane('clip%d' % i, p1)
-		convertImageToPlane('clip%d' % i, p2)
-		convertImageToPlane('clip%d' % i, p3)
-		convertImageToPlane('clip%d' % i, p4)
-		convertImageToPlane('clip%d' % i, 'ball')
+	# for i in range(2, 3):
+	# 	if i in [1,2,3,4]:
+	# 		p1 = 'green1'
+	# 		p2 = 'green2'
+	# 	else:
+	# 		p1 = 'red1'
+	# 		p2 = 'red2'
+	# 	p3 = 'white1'
+	# 	p4 = 'white2'
+	# 	convertImageToPlane('clip%d' % i, p1)
+	# 	convertImageToPlane('clip%d' % i, p2)
+	# 	convertImageToPlane('clip%d' % i, p3)
+	# 	convertImageToPlane('clip%d' % i, p4)
+	# 	convertImageToPlane('clip%d' % i, 'ball')
 
 	# We plot each players' court coordinates, together with the ball in a topdown view
 	# As the background is white, we choose yellow to represent the white team instead
 	# Blue represents the ball
-	for i in range(2, 3):
-		plot_topdown(i)
+	# for i in range(2, 3):
+	# 	plot_topdown(i)
+
+	# Output final video file
+	outputFinalSubmission()
 	
 if __name__ == "__main__":
 	main()
